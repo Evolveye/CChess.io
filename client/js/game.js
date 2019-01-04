@@ -20,7 +20,7 @@ class Game {
 
     this.resize()
     
-    ws.send( `game_init`, {
+    ws.send( `game-init`, {
       id: this.player.id,
       x: this.player.x,
       y: this.player.y
@@ -42,7 +42,7 @@ class Game {
     if ( Game.key( `down` ) )
       this.player.y++
 
-    ws.send( `game_update`, {
+    ws.send( `game-player_update`, {
       x: this.player.x,
       y: this.player.y
     } )
@@ -101,7 +101,7 @@ Game.keys = []
 const game = new Game
 const player = game.player
 
-ws.on( `game_update`, players => {
+ws.on( `game-update`, players => {
   game.entities = []
 
   for ( const p of players )

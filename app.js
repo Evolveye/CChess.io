@@ -1,15 +1,10 @@
 "use script"
 
-// Azure isn't reading ES6 modules ¯\_(ツ)_/¯
+// Azure isn't supporting ES6 modules ¯\_(ツ)_/¯
 const http = require( `http` )
 const fs = require( `fs` )
 const WebSocket = require( `ws` )
 const wssRooms = require(`./js/wssRooms.js`)
-
-
-
-/* *
- * Servers config */
 
 const port = process.env.PORT  ||  80
 const mimeTypes = {
@@ -19,62 +14,83 @@ const mimeTypes = {
   js: `text/javascript`
 }
 
-const server = http.createServer( (req, res) => {
-  const address = req.url === `/`  ?  `/index.html`  :  req.url
-  const mimeType = mimeTypes[ address.split( /.*\./ )[ 1 ] ]
-  let file = null
+const server = http
+  .createServer( (req, res) => {
+    let address = req.url === `/`  ?  `/index.html`  :  req.url
+    let mimeType = mimeTypes[ address.split( /.*\./ )[ 1 ] ]
+    let file = null
 
-  if ( fs.existsSync( `./client${address}` ) )
-    file = fs.readFileSync( `./client${address}` )
+    if ( fs.existsSync( `./client${address}` ) )
+      file = fs.readFileSync( `./client${address}` )
 
-  res.writeHead( 200, { "Content-Type":mimeType } )
-  res.end( file )
-} ).listen( port )
-
-console.log( `\nServer is running on port ${port}\n` )
+    res.writeHead( 200, { "Content-Type":mimeType } )
+    res.end( file )
+  } )
+  .listen( port )
 
 const wss = new WebSocket.Server( { server } )
 
+console.log( `\nServer started on port ${port}\n`)
 
 
-/* *
- * WebSocket config */
-
-class SocketData {
-  constructor( socket, server ) {
-    this.server = server
-    this.socket = socket
-    this.room = null
-  }
-
-  send( type, data ) {
-    this.socket.send( JSON.stringify( { type, data } ) )
+class AppWss {
+  constructor( wss ) {
+    this.wss = wss
   }
 
   broadcast( type, data ) {
-    this.server.clients.forEach( ws => ws.data.send( type, data ) )
+    this.wss.clients.forEach( ws => ws.appWs.send( type, data ) )
+  }
+
+  get sockets() {
+    return [ ...this.wss.clients ].map( ws => ws.appWs )
+  }
+}
+
+class AppWs {
+  constructor( ws, wss ) {
+    this.wss = wss
+    this.ws = ws
+  }
+
+  send( type, data ) {
+    this.ws.send( JSON.stringify( { type, data } ) )
+  }
+
+  broadcast( type, data ) {
+    this.wss.clients.forEach( ws => ws.appWs.send( type, data ) )
   }
 }
 
 
+
+wss.appWss = new AppWss( wss )
 wss.on( `connection`, ws => {
-  ws.data = new SocketData( ws, wss )
+  const appWs = ws.appWs = new AppWs( ws, wss )
 
   ws.onmessage = e => {
     if ( ws.readyState !== 1 )
       return
-      
+
     const { type, data } = JSON.parse( e.data )
 
     switch ( type ) {
-      case `$changeRoom`:
-        ws.data.room = data
+      case `$app-change_room`:
+        appWs.room = data
         break
+
       default:
-        if ( wssRooms.has( ws.data.room ) )
-          wssRooms.get( ws.data.room )( type, data, ws.data )
+        if ( wssRooms.has( appWs.room ) )
+          wssRooms.get( appWs.room )( type, data, appWs )
     }
   }
 
-  ws.onclose = e => console.log( e.target.data.player )
+  ws.onclose = e => console.log( e.target.appWs.player )
 } )
+
+setInterval( () => {
+  wss.appWss.broadcast( `game-update`, wss.appWss.sockets
+    .filter( appWs => !!appWs.player )
+    .map( appWs => appWs.player )
+  )
+}, 1000 / 60 )
