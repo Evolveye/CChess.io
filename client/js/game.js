@@ -60,7 +60,8 @@ class Game {
 
     this.camera = {
       x: window.innerWidth / 2 - this.player.x * tileSize,
-      y: window.innerHeight / 2 - this.player.y * tileSize
+      y: window.innerHeight / 2 - this.player.y * tileSize,
+      mouse: { down:false, initialX:null, initialY:null }
     }
     this.map = { tileSize, width, height }
 
@@ -209,6 +210,26 @@ window.game = game
 window.player = game.player
 
 
+window.addEventListener( `resize`, () => game.resize() )
 document.addEventListener( `keydown`, e => Game.keys[ e.keyCode ] = true )
 document.addEventListener( `keyup`, e => Game.keys[ e.keyCode ] = false )
-window.addEventListener( `resize`, () => game.resize() )
+document.addEventListener( `mouseup`, e => game.camera.mouse.down = false )
+document.addEventListener( `mousedown`, e => {
+  let m = game.camera.mouse
+
+  m.down = true
+  m.initialX = e.clientX
+  m.initialY = e.clientY
+} )
+document.addEventListener( `mousemove`, e => {
+  let m = game.camera.mouse
+
+  if ( !m.down )
+    return
+
+  game.camera.x += e.clientX - m.initialX
+  game.camera.y += e.clientY - m.initialY
+
+  m.initialX = e.clientX
+  m.initialY = e.clientY
+} )
