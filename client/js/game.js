@@ -1,4 +1,5 @@
 import ws from "./ws.js"
+import { Pawn } from "./chessPieces.js"
 
 function random( min, max ) {
   return Math.floor( Math.random() * (max - min) ) + min
@@ -12,13 +13,10 @@ function randomColor() {
   return `#${color}`
 }
 
-class Player {
+class Player extends Pawn {
   constructor( x, y, movingTimestamp, color, controling ) {
-    this.id = Math.random()
-    this.x = x
-    this.y = y
+    super( x, y, color )
 
-    this.color = color
     this.canMove = true
     this.movingTimestamp = movingTimestamp
 
@@ -64,7 +62,7 @@ class Game {
       playerControling
     )
 
-    this.entities = []
+    this.chessPieces = []
 
     this.camera = {
       spaceAroundgame: 100,
@@ -198,7 +196,7 @@ class Game {
     ctx.strokeStyle = `white`
     ctx.lineWidth = 1
 
-    const allEntities = [ ...this.entities, p ]
+    const allEntities = [ ...this.chessPieces, p ]
     for ( const e of allEntities ) {
       ctx.fillStyle = `#000`
       ctx.beginPath()
@@ -249,11 +247,11 @@ const game = new Game( 32, 32, 50, 200, `wsad` )
 const player = game.player
 
 ws.on( `game-update`, players => {
-  game.entities = []
+  game.chessPieces = []
 
   for ( const p of players )
     if ( p.id !== player.id )
-      game.entities.push( p )
+      game.chessPieces.push( p )
 } )
 
 window.Game = Game
