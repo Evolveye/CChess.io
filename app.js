@@ -61,6 +61,9 @@ wss.on( `connection`, ws => {
   ws.data = new SocketData( ws, wss )
 
   ws.onmessage = e => {
+    if ( ws.readyState !== 1 )
+      return
+      
     const { type, data } = JSON.parse( e.data )
 
     switch ( type ) {
