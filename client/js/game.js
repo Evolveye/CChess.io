@@ -35,7 +35,7 @@ class Player extends Pawn {
   }
 }
 
-class Game {
+export default class Game {
   constructor( width, height, tileSize, playerMovingTimestamp, playerControling ) {
 
     /* *
@@ -97,6 +97,13 @@ class Game {
       x: this.player.x,
       y: this.player.y
     } )
+    ws.on( `game-update`, chessPieces => {
+      this.chessPieces = []
+    
+      for ( const chessPiece of chessPieces )
+        if ( chessPiece.id !== player.id )
+          this.chessPieces.push( chessPiece )
+    } )
 
     setInterval( () => {
       this.logic()
@@ -112,6 +119,7 @@ class Game {
       m.initialX = e.clientX
       m.initialY = e.clientY
     } )
+    
     document.addEventListener( `mousemove`, e => {
       const c = this.camera
       const m = this.map
@@ -242,22 +250,6 @@ class Game {
   }
 }
 Game.keys = []
-
-const game = new Game( 32, 32, 50, 200, `wsad` )
-const player = game.player
-
-ws.on( `game-update`, players => {
-  game.chessPieces = []
-
-  for ( const p of players )
-    if ( p.id !== player.id )
-      game.chessPieces.push( p )
-} )
-
-window.Game = Game
-window.game = game
-window.player = game.player
-
 
 
 document.addEventListener( `keydown`, e => Game.keys[ e.keyCode ] = true )
