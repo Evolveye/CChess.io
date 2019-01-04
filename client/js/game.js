@@ -1,7 +1,15 @@
 import ws from "./ws.js"
 
-function rand( min, max ) {
+function random( min, max ) {
   return Math.floor( Math.random() * (max - min) ) + min
+}
+function randomColor() {
+  let color = (Math.random()*0xFFFFFF << 0).toString(16)
+
+  while ( color.length < 6 )
+    color = `0${color}`
+
+  return `#${color}`
 }
 
 class Player {
@@ -49,21 +57,34 @@ class Game {
      * Data */
 
     this.player = new Player(
-      rand( 1, width ),
-      rand( 1, height ),
+      random( 1, width ),
+      random( 1, height ),
       playerMovingTimestamp,
-      `#${(Math.random()*0xFFFFFF << 0).toString(16)}`,
+      randomColor(),
       playerControling
     )
 
     this.entities = []
 
     this.camera = {
+      spaceAroundgame: 100,
       x: window.innerWidth / 2 - this.player.x * tileSize,
       y: window.innerHeight / 2 - this.player.y * tileSize,
       mouse: { down:false, initialX:null, initialY:null }
     }
     this.map = { tileSize, width, height }
+
+
+    let c = this.camera
+    let m = this.map
+    if ( c.y > c.spaceAroundgame )
+      c.y = c.spaceAroundgame
+    else if ( c.y < window.innerHeight - c.spaceAroundgame - m.height * m.tileSize )
+      c.y = window.innerHeight - c.spaceAroundgame - m.height * m.tileSize
+    if ( c.x > c.spaceAroundgame )
+      c.x = c.spaceAroundgame
+    else if ( c.x < window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
+      c.x = window.innerWidth - c.spaceAroundgame - m.width * m.tileSize
 
 
 
@@ -83,6 +104,36 @@ class Game {
       this.logic()
       requestAnimationFrame( () => this.draw() )
     }, 1000 / 60 )
+
+    window.addEventListener( `resize`, () => this.resize() )
+    document.addEventListener( `mouseup`, () => this.camera.mouse.down = false )
+    document.addEventListener( `mousedown`, e => {
+      let m = this.camera.mouse
+
+      m.down = true
+      m.initialX = e.clientX
+      m.initialY = e.clientY
+    } )
+    document.addEventListener( `mousemove`, e => {
+      const c = this.camera
+      const m = this.map
+
+      if ( !c.mouse.down )
+        return
+
+      let newX = e.clientX - c.mouse.initialX + c.x
+      let newY = e.clientY - c.mouse.initialY + c.y
+
+      console.log( window.innerHeight / 2 - m.height * m.tileSize , newY )
+
+      if ( window.innerWidth - c.spaceAroundgame - m.width * m.tileSize < newX && newX < c.spaceAroundgame )
+        c.x = newX
+      if ( window.innerHeight - c.spaceAroundgame - m.height * m.tileSize < newY && newY < c.spaceAroundgame )
+        c.y = newY
+
+      c.mouse.initialX = e.clientX
+      c.mouse.initialY = e.clientY
+    } )
   }
 
   logic() {
@@ -104,13 +155,13 @@ class Game {
       setTimeout( () => p.canMove = true, p.movingTimestamp )
     }
 
-    if ( Game.key( p.control.mapUp ) && c.y < window.innerHeight / 2 )
+    if ( Game.key( p.control.mapUp ) && c.y < c.spaceAroundgame )
       c.y += m.tileSize / 2
-    if ( Game.key( p.control.mapDown ) && c.y > window.innerHeight / 2 - m.height * m.tileSize )
+    if ( Game.key( p.control.mapDown ) && c.y > window.innerHeight - c.spaceAroundgame - m.height * m.tileSize )
       c.y -= m.tileSize / 2
-    if ( Game.key( p.control.mapLeft ) && c.x < window.innerWidth / 2 )
+    if ( Game.key( p.control.mapLeft ) && c.x < c.spaceAroundgame )
       c.x += m.tileSize / 2
-    if ( Game.key( p.control.mapRight ) && c.x > window.innerWidth / 2 - m.width * m.tileSize )
+    if ( Game.key( p.control.mapRight ) && c.x > window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
       c.x -= m.tileSize / 2
 
     ws.send( `game-player_update`, {
@@ -210,26 +261,6 @@ window.game = game
 window.player = game.player
 
 
-window.addEventListener( `resize`, () => game.resize() )
+
 document.addEventListener( `keydown`, e => Game.keys[ e.keyCode ] = true )
 document.addEventListener( `keyup`, e => Game.keys[ e.keyCode ] = false )
-document.addEventListener( `mouseup`, e => game.camera.mouse.down = false )
-document.addEventListener( `mousedown`, e => {
-  let m = game.camera.mouse
-
-  m.down = true
-  m.initialX = e.clientX
-  m.initialY = e.clientY
-} )
-document.addEventListener( `mousemove`, e => {
-  let m = game.camera.mouse
-
-  if ( !m.down )
-    return
-
-  game.camera.x += e.clientX - m.initialX
-  game.camera.y += e.clientY - m.initialY
-
-  m.initialX = e.clientX
-  m.initialY = e.clientY
-} )
