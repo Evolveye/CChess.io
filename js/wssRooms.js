@@ -18,6 +18,8 @@ module.exports = new Map( [
         break
 
       case `game-player_update`:
+        if ( !(`player` in appWs) )
+          break
         appWs.player.x = data.x
         appWs.player.y = data.y
         break

@@ -1,22 +1,34 @@
 import ws from "./ws.js"
 
 class Player {
-  constructor() {
+  constructor( movingTimeStamp ) {
     this.id = Math.random()
-    this.x = Math.floor( Math.random() * 700 )
-    this.y = Math.floor( Math.random() * 500 )
+    this.x = 2 // Math.floor( Math.random() * 700 )
+    this.y = 2 // Math.floor( Math.random() * 500 )
+
+    this.width = window.innerWidth
+    this.height = window.innerHeight
+
+    this.canMove = true
+    this.movingTimeStamp = movingTimeStamp
   }
 }
 
 class Game {
-  constructor() {
+  constructor( width, height, tileSize ) {
+    this.box = document.querySelector( `.game` )
+    this.box.innerHTML = /* html */ `
+      <canvas class="canvas-main"></canvas>
+    `
+
     /** @type {HTMLCanvasElement} */
-    this.canvas = document.querySelector( `.canvas-main` )
+    this.canvas = this.box.querySelector( `.canvas-main` )
     this.ctx = this.canvas.getContext( `2d` )
 
-    this.player = new Player
-
+    this.player = new Player( 500 )
     this.entities = []
+
+    this.map = { tileSize, width, height }
 
     this.resize()
     
@@ -33,14 +45,22 @@ class Game {
   }
 
   logic() {
-    if ( Game.key( `left` ) )
-      this.player.x--
-    if ( Game.key( `right` ) )
-      this.player.x++
-    if ( Game.key( `up` ) )
-      this.player.y--
-    if ( Game.key( `down` ) )
-      this.player.y++
+    const m = this.map
+    const p = this.player
+
+    if ( p.canMove && Game.key( `arrow` ) ) {
+      if ( Game.key( `left` ) && p.x )
+        p.x--
+      else if ( Game.key( `right` ) && p.x < m.width )
+        p.x++
+      else if ( Game.key( `up` ) && p.y )
+        p.y--
+      else if ( Game.key( `down` ) && p.y < m.height )
+        p.y++
+
+      p.canMove = false
+      setTimeout( () => p.canMove = true, p.movingTimeStamp )
+    }
 
     ws.send( `game-player_update`, {
       x: this.player.x,
@@ -49,22 +69,32 @@ class Game {
   }
 
   draw() {
+    const m = this.map
     const p = this.player
-    const ctx = game.ctx
+    const ctx = this.ctx
+    const tSize = m.tileSize
 
-    // ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
+    ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
+
+    // map
+    ctx.fillStyle = `#333`
+    for ( let y = 0;  y < m.height;  y++ )
+      for ( let x = y % 2;  x < m.width;  x += 2 ) {
+        ctx.fillRect( x * tSize, y * tSize, tSize, tSize )
+      }
+    
 
     ctx.fillStyle = `#000`
     for ( const e of this.entities ) {
       ctx.beginPath()
-      ctx.arc( e.x, e.y, 10, 0, Math.PI * 2 )
+      ctx.arc( (e.x - .5) * tSize, (e.y - .5) * tSize, 10, 0, Math.PI * 2 )
       ctx.closePath()
       ctx.fill()
     }
 
     ctx.fillStyle = `#F00`
     ctx.beginPath()
-    ctx.arc( p.x, p.y, 10, 0, Math.PI * 2 )
+    ctx.arc( (p.x - .5) * tSize, (p.y - .5) * tSize, 10, 0, Math.PI * 2 )
     ctx.closePath()
     ctx.fill()
   }
@@ -75,30 +105,23 @@ class Game {
   }
 
   static key( key ) {
-    let keyCode
+    const k = Game.keys
 
     if ( typeof key === `string`)
       switch ( key ) {
-        case `left`:
-          keyCode = 37
-          break
-        case `right`:
-          keyCode = 39
-          break
-        case `up`:
-          keyCode = 38
-          break
-        case `down`:
-          keyCode = 40
-          break
+        case `left`: return k[ 37 ]
+        case `right`: return k[ 39 ]
+        case `up`: return k[ 38 ]
+        case `down`: return k[ 40 ]
+        case `arrow`: return k[ 37 ]  ||  k[ 38 ]  ||  k[ 39 ]  ||  k[ 40 ]
       }
 
-    return Game.keys[ keyCode ]
+    return k[ key ]
   }
 }
 Game.keys = []
 
-const game = new Game
+const game = new Game( 20, 20, 30 )
 const player = game.player
 
 ws.on( `game-update`, players => {
