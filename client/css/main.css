@@ -2,6 +2,7 @@ body {
   background-color: antiquewhite;
   overflow: hidden;
   margin: 0;
+  font-family: monospace;
 }
 body > * {
   position: absolute;
@@ -11,6 +12,9 @@ body > * {
   left: 10px;
   top: 10px;
 }
+  .chat-message {
+    margin: 5px;
+  }
 
 .canvas-main {
   width: 100vw;
