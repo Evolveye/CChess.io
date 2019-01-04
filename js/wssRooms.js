@@ -18,17 +18,17 @@ module.exports = new Map( [
         socket.broadcast( `game_update`, [ ...socket.server.clients ].map( socket => socket.data.player ) )
         break
 
-      case `game_update`:
-        if ( !socket.player )
-          break
+      // case `game_update`:
+      //   if ( !socket.player )
+      //     break
           
-        socket.player.x = data.x
-        socket.player.y = data.y
-        socket.broadcast( `game_update`, [ ...socket.server.clients ]
-          .filter( socket => `player` in socket.data )
-          .map( socket => socket.data.player )
-        )
-        break
+      //   socket.player.x = data.x
+      //   socket.player.y = data.y
+      //   socket.broadcast( `game_update`, [ ...socket.server.clients ]
+      //     .filter( socket => `player` in socket.data )
+      //     .map( socket => socket.data.player )
+      //   )
+      //   break
     }
   } ]
 ] )
