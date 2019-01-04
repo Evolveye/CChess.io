@@ -1,0 +1,17 @@
+body {
+  background-color: antiquewhite;
+  overflow: hidden;
+  margin: 0;
+}
+body > * {
+  position: absolute;
+}
+
+.canvas-main {
+  width: 100vw;
+  height: 100vh;
+}
+
+.server_connection {
+  right: 0;
+}

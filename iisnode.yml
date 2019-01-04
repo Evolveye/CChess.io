@@ -1,0 +1,1 @@
+nodeProcessCommandLine: "%ProgramFiles(x86)%/nodejs/10.14.1/node.exe" # --experimental-modules

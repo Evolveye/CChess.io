@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/2c113e83-cb7b-4922-8350-45d6be06ce37/resourceGroups/Cactu/providers/Microsoft.Web/sites/cactu",
+  "appService.deploySubpath": ""
+}
