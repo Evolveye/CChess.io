@@ -54,6 +54,9 @@ class AppWs {
   }
 
   send( type, data ) {
+    if ( this.ws.readyState !== 1 )
+      return
+
     this.ws.send( JSON.stringify( { type, data } ) )
   }
 
