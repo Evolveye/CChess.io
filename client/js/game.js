@@ -160,8 +160,8 @@ ws.on( `game-update`, players => {
       } )
 } )
 
-window.Game = Game
-window.game = game
+// window.Game = Game
+// window.game = game
 
 
 document.addEventListener( `keydown`, e => Game.keys[ e.keyCode ] = true )

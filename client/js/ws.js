@@ -36,7 +36,7 @@ const socket = {
 
 socket.changeRoom( `chess` )
 
-window.ws = ws
-window.socket = socket
+// window.ws = ws
+// window.socket = socket
 
 export default socket
