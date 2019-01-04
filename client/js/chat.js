@@ -2,9 +2,7 @@ import ws from "./ws.js"
 
 const chatbox = document.querySelector( `.chat` )
 chatbox.innerHTML = /* html */ `
-  <div class="chat-messages">
-    <p class="chat-message">Hello 🌵</p>
-  </div>
+  <div class="chat-messages"></div>
   <input class="chat-input">
 `
 
@@ -18,9 +16,13 @@ chatInput.onkeydown = e => {
   }
 }
 
+ws.send( `chat-new_message`, `Hello 🌵` )
 ws.on( `chat-new_message`, msg => {
   const message = document.createElement( `p` )
   message.className = `chat-message`
   message.textContent = msg
+
   chatMessages.insertAdjacentElement( `beforeend`, message )
+
+  setTimeout( () => message.remove(), 1000 * 5 )
 } )

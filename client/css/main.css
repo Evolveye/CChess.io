@@ -6,6 +6,7 @@ body {
 }
 body > * {
   position: absolute;
+  color: #FFFFFFBB;
 }
 
 .chat {
@@ -13,7 +14,9 @@ body > * {
   top: 10px;
 }
   .chat-message {
-    margin: 5px;
+    margin: 0;
+    padding: 5px;
+    background-color: #00000044;
   }
 
 .canvas-main {

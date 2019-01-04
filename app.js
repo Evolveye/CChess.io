@@ -87,8 +87,6 @@ wss.on( `connection`, ws => {
           wssRooms.get( appWs.room )( type, data, appWs )
     }
   }
-
-  ws.onclose = e => console.log( e.target.appWs.player )
 } )
 
 setInterval( () => {
