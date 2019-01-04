@@ -2,9 +2,8 @@
   "name": "simplenode",
   "version": "1.0.0",
   "description": "",
-  "main": "hello.mjs",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app"
   },
   "author": "",
