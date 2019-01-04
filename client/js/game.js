@@ -1,14 +1,15 @@
 import ws from "./ws.js"
 
 class Player {
-  constructor( movingTimeStamp ) {
+  constructor( movingTimeStamp, color ) {
     this.id = Math.random()
-    this.x = 2 // Math.floor( Math.random() * 700 )
-    this.y = 2 // Math.floor( Math.random() * 500 )
+    this.x = 10 // Math.floor( Math.random() * 700 )
+    this.y = 10 // Math.floor( Math.random() * 500 )
 
     this.width = window.innerWidth
     this.height = window.innerHeight
 
+    this.color = color
     this.canMove = true
     this.movingTimeStamp = movingTimeStamp
   }
@@ -16,6 +17,9 @@ class Player {
 
 class Game {
   constructor( width, height, tileSize ) {
+
+    /* *
+     * Structure */
     this.box = document.querySelector( `.game` )
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
@@ -25,10 +29,23 @@ class Game {
     this.canvas = this.box.querySelector( `.canvas-main` )
     this.ctx = this.canvas.getContext( `2d` )
 
-    this.player = new Player( 500 )
+
+
+    /* *
+     * Data */
+
+    this.pawnColors = [`#4DFF57`, `#7461FF`, `#FF524C`, `#FFC16D`, `#ACFFE7`, `#B83EE8`]
+
+    this.player = new Player( 500, this.pawnColors[ Math.floor( Math.random() * this.pawnColors.length ) ] )
+
     this.entities = []
 
     this.map = { tileSize, width, height }
+
+
+
+    /* *
+     * Initialization */
 
     this.resize()
     
@@ -92,9 +109,17 @@ class Game {
       ctx.fill()
     }
 
-    ctx.fillStyle = `#F00`
+    ctx.strokeStyle = `white`
+    ctx.lineWidth = 1
     ctx.beginPath()
     ctx.arc( (p.x - .5) * tSize, (p.y - .5) * tSize, 10, 0, Math.PI * 2 )
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+
+    ctx.fillStyle = p.color
+    ctx.beginPath()
+    ctx.arc( (p.x - .5) * tSize, (p.y - .5) * tSize, 3, 0, Math.PI * 2 )
     ctx.closePath()
     ctx.fill()
   }
