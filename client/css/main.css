@@ -7,11 +7,22 @@ body > * {
   position: absolute;
 }
 
+.chat {
+  left: 10px;
+  top: 10px;
+}
+
 .canvas-main {
   width: 100vw;
   height: 100vh;
 }
 
 .server_connection {
-  right: 0;
+  right: 10px;
+  top: 10px;
+}
+
+.version {
+  right: 10px;
+  bottom: 10px
 }
