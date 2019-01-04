@@ -5,22 +5,32 @@ function rand( min, max ) {
 }
 
 class Player {
-  constructor( x, y, movingTimestamp, color ) {
+  constructor( x, y, movingTimestamp, color, controling ) {
     this.id = Math.random()
     this.x = x
     this.y = y
 
-    this.width = window.innerWidth
-    this.height = window.innerHeight
-
     this.color = color
     this.canMove = true
     this.movingTimestamp = movingTimestamp
+
+    this.control = {
+      up: controling === `wsad`  ?  `w`  :  `up`,
+      down: controling === `wsad`  ?  `s`  :  `down`,
+      left: controling === `wsad`  ?  `a`  :  `left`,
+      right: controling === `wsad`  ?  `d`  :  `right`,
+      wantToMove: controling === `wsad`  ?  `wsad`  :  `arrow`,
+
+      mapUp: controling === `wsad`  ?  `up`  :  `w`,
+      mapDown: controling === `wsad`  ?  `down`  :  `s`,
+      mapLeft: controling === `wsad`  ?  `left`  :  `a`,
+      mapRight: controling === `wsad`  ?  `right`  :  `d`,
+    }
   }
 }
 
 class Game {
-  constructor( width, height, tileSize, playerMovingTimestamp ) {
+  constructor( width, height, tileSize, playerMovingTimestamp, playerControling ) {
 
     /* *
      * Structure */
@@ -38,20 +48,19 @@ class Game {
     /* *
      * Data */
 
-    this.pawnColors = [`#4DFF57`, `#7461FF`, `#FF524C`, `#FFC16D`, `#ACFFE7`, `#B83EE8`]
-
     this.player = new Player(
       rand( 1, width ),
       rand( 1, height ),
       playerMovingTimestamp,
-      this.pawnColors[ Math.floor( Math.random() * this.pawnColors.length ) ]
+      `#${(Math.random()*0xFFFFFF << 0).toString(16)}`,
+      playerControling
     )
 
     this.entities = []
 
     this.camera = {
-      x: this.player.width / 2 - this.player.x * tileSize,
-      y: this.player.height / 2 - this.player.y * tileSize
+      x: window.innerWidth / 2 - this.player.x * tileSize,
+      y: window.innerHeight / 2 - this.player.y * tileSize
     }
     this.map = { tileSize, width, height }
 
@@ -64,6 +73,7 @@ class Game {
     
     ws.send( `game-init`, {
       id: this.player.id,
+      color: this.player.color,
       x: this.player.x,
       y: this.player.y
     } )
@@ -79,27 +89,28 @@ class Game {
     const c = this.camera
     const p = this.player
 
-    if ( p.canMove && Game.key( `arrow` ) ) {
-      if ( Game.key( `left` ) && p.x > 1 ) {
-        c.x += m.tileSize
+    if ( p.canMove && Game.key( p.control.wantToMove ) ) {
+      if ( Game.key( p.control.left ) && p.x > 1 )
         p.x--
-      }
-      else if ( Game.key( `right` ) && p.x < m.width ) {
-        c.x -= m.tileSize
+      else if ( Game.key( p.control.right ) && p.x < m.width )
         p.x++
-      }
-      else if ( Game.key( `up` ) && p.y > 1 ) {
-        c.y += m.tileSize
+      else if ( Game.key( p.control.up ) && p.y > 1 )
         p.y--
-      }
-      else if ( Game.key( `down` ) && p.y < m.height ) {
-        c.y -= m.tileSize
+      else if ( Game.key( p.control.down ) && p.y < m.height )
         p.y++
-      }
 
       p.canMove = false
       setTimeout( () => p.canMove = true, p.movingTimestamp )
     }
+
+    if ( Game.key( p.control.mapUp ) && c.y < window.innerHeight / 2 )
+      c.y += m.tileSize / 2
+    if ( Game.key( p.control.mapDown ) && c.y > window.innerHeight / 2 - m.height * m.tileSize )
+      c.y -= m.tileSize / 2
+    if ( Game.key( p.control.mapLeft ) && c.x < window.innerWidth / 2 )
+      c.x += m.tileSize / 2
+    if ( Game.key( p.control.mapRight ) && c.x > window.innerWidth / 2 - m.width * m.tileSize )
+      c.x -= m.tileSize / 2
 
     ws.send( `game-player_update`, {
       x: this.player.x,
@@ -132,32 +143,26 @@ class Game {
     /* *
      * Entities */
 
-    ctx.fillStyle = `#000`
-    for ( const e of this.entities ) {
+    ctx.strokeStyle = `white`
+    ctx.lineWidth = 1
+
+    const allEntities = [ ...this.entities, p ]
+    for ( const e of allEntities ) {
+      ctx.fillStyle = `#000`
       ctx.beginPath()
-      ctx.arc( c.x + (e.x - .5) * tSize, c.y + (e.y - .5) * tSize, 10, 0, Math.PI * 2 )
+      ctx.arc( c.x + (e.x - .5) * tSize, c.y + (e.y - .5) * tSize, 15, 0, Math.PI * 2 )
+      ctx.closePath()
+      ctx.fill()
+
+      if ( e.id === p.id )
+        ctx.stroke()
+  
+      ctx.fillStyle = e.color
+      ctx.beginPath()
+      ctx.arc( c.x + (e.x - .5) * tSize, c.y + (e.y - .5) * tSize, 5, 0, Math.PI * 2 )
       ctx.closePath()
       ctx.fill()
     }
-
-
-    
-    /* *
-     * Player */
-
-    ctx.strokeStyle = `white`
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.arc( c.x + (p.x - .5) * tSize, c.y + (p.y - .5) * tSize, 10, 0, Math.PI * 2 )
-    ctx.closePath()
-    ctx.fill()
-    ctx.stroke()
-
-    ctx.fillStyle = p.color
-    ctx.beginPath()
-    ctx.arc( c.x + (p.x - .5) * tSize, c.y + (p.y - .5) * tSize, 3, 0, Math.PI * 2 )
-    ctx.closePath()
-    ctx.fill()
   }
 
   resize() {
@@ -175,6 +180,12 @@ class Game {
         case `up`: return k[ 38 ]
         case `down`: return k[ 40 ]
         case `arrow`: return k[ 37 ]  ||  k[ 38 ]  ||  k[ 39 ]  ||  k[ 40 ]
+
+        case `w`: return k[ 87 ]
+        case `s`: return k[ 83 ]
+        case `a`: return k[ 65 ]
+        case `d`: return k[ 68 ]
+        case `wsad`: case `WSAD`: return k[ 87 ]  ||  k[ 83 ]  ||  k[ 65 ]  ||  k[ 68 ]
       }
 
     return k[ key ]
@@ -182,7 +193,7 @@ class Game {
 }
 Game.keys = []
 
-const game = new Game( 20, 20, 30, 100 )
+const game = new Game( 32, 32, 50, 200, `wsad` )
 const player = game.player
 
 ws.on( `game-update`, players => {
@@ -190,10 +201,7 @@ ws.on( `game-update`, players => {
 
   for ( const p of players )
     if ( p.id !== player.id )
-      game.entities.push( {
-        x: p.x,
-        y: p.y
-      } )
+      game.entities.push( p )
 } )
 
 window.Game = Game

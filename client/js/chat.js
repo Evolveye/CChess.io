@@ -24,5 +24,5 @@ ws.on( `chat-new_message`, msg => {
 
   chatMessages.insertAdjacentElement( `beforeend`, message )
 
-  setTimeout( () => message.remove(), 1000 * 5 )
+  setTimeout( () => message.remove(), 1000 * 10 )
 } )
