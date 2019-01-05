@@ -1,5 +1,5 @@
 import ws from "./ws.js"
-import { Pawn } from "./chessPieces.js"
+import { Hetman, Pawn } from "./chessPieces.js"
 
 class Player extends Pawn {
   constructor( { id, x, y, color, movingTimestamp } ) {
@@ -58,7 +58,6 @@ export default class Game {
     ws.on( `game-init`, ( { chessmanSize, player, map } ) => {
       const { width, height, tileSize } = map
       const c = this.camera
-
       console.log( player )
 
       this.chessmanSize = chessmanSize
@@ -71,7 +70,7 @@ export default class Game {
           if ( !map.data[ y ][ x ] )
             continue
 
-          map.data[ y ][ x ] = new Pawn( x, y, map.data[ y ][ x ].color )
+          map.data[ y ][ x ] = new Hetman( x, y, map.data[ y ][ x ].color )
         }
 
       c.x = window.innerWidth / 2 - player.x * tileSize
@@ -96,6 +95,7 @@ export default class Game {
         let from = this.changePosition.from
         let to = this.changePosition.to
 
+        console.log( from, to )
         if ( to.x !== null ) {
           if ( md[ from.y ][ from.x ].move( to.x, to.y ) ) {
             // md[ to.y ][ to.x ] = md[ from.y ][ from.x ]
@@ -155,6 +155,12 @@ export default class Game {
         for ( const { from, to } of jumpsfromTo ) {
           md[ to.y ][ to.x ] = md[ from.y ][ from.x ]
           md[ from.y ][ from.x ] = null
+        }
+      } )
+      ws.on( `game-add_chess_Piece`, newChessPieces => {
+        for ( const chessPiece of newChessPieces ) {
+          const { x, y, color } = chessPiece
+          md[ y ][ x ] = new Pawn( x, y, color )
         }
       } )
     } )

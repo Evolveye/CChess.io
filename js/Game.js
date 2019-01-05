@@ -16,6 +16,12 @@ class Color {
     
       this.txtFormat = `#${hex}`
     }
+    else if ( typeof hex === `string` && hex[ 0 ] === `#` ) {
+      this.r = parseInt( hex.slice( 1, 3 ), 16 )
+      this.g = parseInt( hex.slice( 3, 5 ), 16 )
+      this.b = parseInt( hex.slice( 5, 7 ), 16 )
+      this.txtFormat = hex
+    }
     else
       this.txtFormat = `rgb( ${this.r}, ${this.g}, ${this.b} )`
   }
@@ -31,7 +37,7 @@ class Chessman {
     this.id = Math.random()
     this.x = x
     this.y = y
-    this.color = color  ||  new Color
+    this.color = color  ||  new Color( `#FFFFFF` )
   }
 
   move() {
@@ -44,15 +50,28 @@ class Pawn extends Chessman {
     super( x, y, color )
   }
 
-  move( x, y ) {
-    return true
+  move( x=0, y=0 ) {
+    if ( !(x == this.x) != !(y == this.y) ) {
+      if ( x == this.x + 1 || x == this.x - 1) {
+        this.x = x
+        return true
+      }
+      else if ( y == this.y + 1 || y == this.y - 1 ) {
+        this.y = y
+        return true
+      }
+    }
+    return false
+  }
+}
 
-    if ( !!x == !!y )
-      return
-    if ( x && (x == this.x + 1 || x == this.x - 1) )
-      this.x = x
-    else if ( y == this.y + 1 || y == this.y - 1 )
-      this.y = y
+class God extends Chessman {
+  constructor( x, y, color ) {
+    super( x, y, color )
+  }
+
+  move() {
+    return true
   }
 }
 
@@ -76,14 +95,30 @@ module.exports = class Game {
       data: [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => null ) )
     }
     
+    this.broadcastData = {
+      jumpsFromTo: [],
+      newChessPieces: []
+    }
     this.jumpsFromTo = []
 
-    setInterval( () => {
-      appWss.sockets
-        .filter( appWs => appWs.room === `chess-standard` )
-        .forEach( socket => socket.send( `game-update_positions`, this.jumpsFromTo ) )
+    for ( let i = 10;  i;  i-- ) {
+      let x = random( 0, this.map.width )
+      let y = random( 0, this.map.height )
 
-      this.jumpsFromTo = []
+      this.map.data[ y ][ x ] = new God( x, y )
+    }
+
+    setInterval( () => {
+      let sockets = appWss.sockets.filter( appWs => appWs.room === `chess-standard` )
+
+      sockets.forEach( socket => socket.send( `game-update_positions`, this.broadcastData.jumpsFromTo ) )
+
+      this.broadcastData.jumpsFromTo = []
+
+      if ( this.broadcastData.newChessPieces.length ) {
+        sockets.forEach( socket => socket.send( `game-add_chess_Piece`, this.broadcastData.newChessPieces ) )
+        this.broadcastData.newChessPieces = []
+      }
     }, 1000 / 60 )
   }
 
@@ -98,13 +133,12 @@ module.exports = class Game {
         let y = random( 0, this.map.height )
         
         let player = this.map.data[ y ][ x ] = new Player( x, y, this.playerMovingTimestamp )
-
+        this.broadcastData.newChessPieces.push( player )
         appWs.send( `game-init`, {
           chessmanSize: this.chessmanSize,
           map: this.map,
           player
         } )
-
         break
       }
 
@@ -113,12 +147,14 @@ module.exports = class Game {
         const map = this.map.data
 
         let mapField = map[ from.y ]  ?  map[ from.y ][ from.x ]  :  null
+        console.log( from, to )
 
         if ( appWs.room == `chess-standard` && mapField && mapField.move( to.x, to.y ) ) {
+          console.log( true )
           map[ to.y ][ to.x ] = map[ from.y ][ from.x ]
           map[ from.y ][ from.x ] = null
 
-          this.jumpsFromTo.push( data )
+          this.broadcastData.jumpsFromTo.push( data )
         }
 
         break

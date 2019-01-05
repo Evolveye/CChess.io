@@ -52,19 +52,32 @@ class Chessman {
   }
 }
 
-export class Pawn extends Chessman {
+export class Hetman extends Chessman {
   constructor( x, y, color ) {
     super( x, y, color, `./../img/hetman.png` )
   }
 
   move( x, y ) {
     return true
+  }
+}
 
-    if ( !!x == !!y )
-      return
-    if ( x && (x == this.x + 1 || x == this.x - 1) )
-      this.x = x
-    else if ( y == this.y + 1 || y == this.y - 1 )
-      this.y = y
+export class Pawn extends Chessman {
+  constructor( x, y, color ) {
+    super( x, y, color, `./../img/pawn.png` )
+  }
+
+  move( x, y ) {
+    if ( !(x == this.x) != !(y == this.y) ) {
+      if ( x == this.x + 1 || x == this.x - 1) {
+        this.x = x
+        return true
+      }
+      else if ( y == this.y + 1 || y == this.y - 1 ) {
+        this.y = y
+        return true
+      }
+    }
+    return false
   }
 }
