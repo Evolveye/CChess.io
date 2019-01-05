@@ -9,6 +9,9 @@ class Chessman {
     this.tex.onload = () => this.color = color
   }
 
+  /**
+   * @param {{ r:number, g:number, b:number }} color
+   */
   set color( color ) {
     const t = this.tex
 

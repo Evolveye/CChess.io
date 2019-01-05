@@ -12,12 +12,33 @@ ws.onmessage = e => {
     messagehandlers.get( type )( data )
 }
 
+const queque = {
+  _queque: [],
+  get ready() {
+    return ws.readyState === 1  &&  !this._queque.length
+  },
+  push( func, ...params ) {
+    this._queque.push( { func, params } )
+  },
+  run() {
+    if ( ws.readyState === 1 ) {
+      let que = [ ...queque._queque ]
+      this._queque = []
+
+      for ( const quest of que )
+        quest.func( ...quest.params )
+    }
+    else
+      setTimeout( () => this.run(), 500 )
+  }
+}
+
 const socket = {
   send( type, data ) {
-    if ( ws.readyState === 1 )
+    if ( queque.ready )
       ws.send( JSON.stringify( { type, data } ) )
     else
-      setTimeout( () => this.send( type, data ), 500 )
+      queque.push( this.send, type, data )
   },
 
   on( type, func ) {
@@ -25,18 +46,15 @@ const socket = {
   },
 
   changeRoom( roomName ) {
-    if ( ws.readyState === 1 )
-      this.send( `$app-change_room`, roomName )
+    if ( queque.ready )
+      socket.send( `$app-change_room`, roomName )
     else
-      setTimeout( () => this.changeRoom( roomName ), 500 )
+      queque.push( this.changeRoom, roomName )
   }
 }
 
+queque.run()
 
-
-socket.changeRoom( `chess` )
-
-// window.ws = ws
-// window.socket = socket
+socket.changeRoom( `chess-standard` )
 
 export default socket

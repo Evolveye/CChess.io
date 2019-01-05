@@ -4,7 +4,7 @@
 const http = require( `http` )
 const fs = require( `fs` )
 const WebSocket = require( `ws` )
-const wssRooms = require(`./js/wssRooms.js`)
+const Game = require(`./js/Game.js`)
 
 const port = process.env.PORT  ||  80
 const mimeTypes = {
@@ -52,6 +52,8 @@ class AppWs {
   constructor( ws, wss ) {
     this.wss = wss
     this.ws = ws
+
+    this.games = ``
   }
 
   send( type, data ) {
@@ -78,21 +80,16 @@ wss.on( `connection`, ws => {
 
     const { type, data } = JSON.parse( e.data )
 
-    switch ( type ) {
-      case `$app-change_room`:
-        appWs.room = data
+    if ( type === `$app-change_room`)
+      appWs.room = data
+    else switch ( appWs.room ) {
+      case `chess-standard`:
+        games.chessStandard.webSocketEvents( type, data, appWs )
         break
-
-      default:
-        if ( wssRooms.has( appWs.room ) )
-          wssRooms.get( appWs.room )( type, data, appWs )
     }
   }
 } )
 
-setInterval( () => {
-  wss.appWss.broadcast( `game-update`, wss.appWss.sockets
-    .filter( appWs => !!appWs.player )
-    .map( appWs => appWs.player )
-  )
-}, 1000 / 60 )
+const games = {
+  chessStandard: new Game( wss.appWss, 32, 32, 50, 40, 200 )
+}

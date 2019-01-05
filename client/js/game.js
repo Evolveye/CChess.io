@@ -1,66 +1,31 @@
 import ws from "./ws.js"
 import { Pawn } from "./chessPieces.js"
 
-function random( min, max ) {
-  return Math.floor( Math.random() * (max - min) ) + min
-}
-
-class Color {
-  constructor( hex ) {
-    this.r = random( 0, 255 )
-    this.g = random( 0, 255 )
-    this.b = random( 0, 255 )
-
-    if ( typeof hex == `boolean` ) {
-      hex = (Math.random()*0xFFFFFF << 0).toString(16)
-    
-      while ( hex.length < 6 )
-        hex = `0${hex}`
-    
-      hex = `#${hex}`
-    }
-
-    if ( hex ) {
-      this.r = parseInt( hex.slice( 1, 3 ), 16 )
-      this.g = parseInt( hex.slice( 3, 5 ), 16 )
-      this.b = parseInt( hex.slice( 5, 7 ), 16 )
-    }
-  }
-
-  [Symbol.toPrimitive]( hint ) {
-    if ( hint === 'string' )
-      return `#${this.r}${this.g}${this.b}`
-  }
-}
-
 class Player extends Pawn {
-  constructor( x, y, movingTimestamp, color, controling ) {
+  constructor( { id, x, y, color, movingTimestamp } ) {
     super( x, y, color )
 
+    this.id = id
     this.canMove = true
     this.movingTimestamp = movingTimestamp
 
-    this.control = {
-      up: controling === `wsad`  ?  `w`  :  `up`,
-      down: controling === `wsad`  ?  `s`  :  `down`,
-      left: controling === `wsad`  ?  `a`  :  `left`,
-      right: controling === `wsad`  ?  `d`  :  `right`,
-      wantToMove: controling === `wsad`  ?  `wsad`  :  `arrow`,
+    // this.control = {
+    //   up: controling === `wsad`  ?  `w`  :  `up`,
+    //   down: controling === `wsad`  ?  `s`  :  `down`,
+    //   left: controling === `wsad`  ?  `a`  :  `left`,
+    //   right: controling === `wsad`  ?  `d`  :  `right`,
+    //   wantToMove: controling === `wsad`  ?  `wsad`  :  `arrow`,
 
-      mapUp: controling === `wsad`  ?  `up`  :  `w`,
-      mapDown: controling === `wsad`  ?  `down`  :  `s`,
-      mapLeft: controling === `wsad`  ?  `left`  :  `a`,
-      mapRight: controling === `wsad`  ?  `right`  :  `d`,
-    }
+    //   mapUp: controling === `wsad`  ?  `up`  :  `w`,
+    //   mapDown: controling === `wsad`  ?  `down`  :  `s`,
+    //   mapLeft: controling === `wsad`  ?  `left`  :  `a`,
+    //   mapRight: controling === `wsad`  ?  `right`  :  `d`,
+    // }
   }
 }
 
 export default class Game {
-  constructor( width, height, tileSize, chessmanSize, playerMovingTimestamp, playerControling ) {
-
-    /* *
-     * Structure */
-    
+  constructor() {
     this.box = document.querySelector( `.game` )
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
@@ -70,134 +35,128 @@ export default class Game {
     this.canvas = this.box.querySelector( `.canvas-main` )
     this.ctx = this.canvas.getContext( `2d` )
 
-
-
-    /* *
-     * Data */
-
-    let x = random( 1, width )
-    let y = random( 1, height )
-    this.map = { 
-      width,
-      height,
-      tileSize,
-      data: [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => null ) )
-    }
-
-    this.player = this.map.data[ y ][ x ] = new Player(
-      x, y, playerMovingTimestamp, new Color( true ), playerControling
-    )
-
+    this.map = null
+    this.chessmanSize = null
     this.camera = {
       spaceAroundgame: 100,
-      x: window.innerWidth / 2 - this.player.x * tileSize,
-      y: window.innerHeight / 2 - this.player.y * tileSize,
-      mouse: { action:null, initialX:null, initialY:null }
+      x: null,
+      y: null,
+      mouse: {
+        action: null,
+        initialX: null,
+        initialY: null
+      }
     }
-
     this.changePosition = {
       from: { x:null, y:null },
       to: { x:null, y:null }
     }
 
-    this.chessmanSize = chessmanSize
-
-
-
-    let c = this.camera
-    if ( c.y > c.spaceAroundgame )
-      c.y = c.spaceAroundgame
-    else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
-      c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
-    if ( c.x > c.spaceAroundgame )
-      c.x = c.spaceAroundgame
-    else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
-      c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
-
-
-
-    /* *
-     * Initialization */
-
     this.resize()
     
-    ws.send( `game-init`, {
-      id: this.player.id,
-      color: this.player.color,
-      x: this.player.x,
-      y: this.player.y
-    } )
-    ws.on( `game-update`, chessPieces => {
-      this.chessPieces = []
-    
-      for ( const chessPiece of chessPieces )
-        if ( chessPiece.id !== player.id )
-          this.chessPieces.push( chessPiece )
-    } )
-
-    setInterval( () => {
-      this.logic()
-      requestAnimationFrame( () => this.draw() )
-    }, 1000 / 60 )
-
-    window.addEventListener( `resize`, () => this.resize() )
-    document.addEventListener( `mouseup`, () => {
-      let startPos = this.changePosition.from
-      let endPos = this.changePosition.to
-      let map = this.map.data
-
-      if ( endPos.x !== null ) {
-        if ( map[ startPos.y ][ startPos.x ].move( endPos.x, endPos.y ) ) {
-          map[ endPos.y ][ endPos.x ] = map[ startPos.y ][ startPos.x ]
-          map[ startPos.y ][ startPos.x ] = null
-        }
-      }
-
-      this.camera.mouse.action = null
-      this.changePosition.from = { x:null, y:null }
-      this.changePosition.to = { x:null, y:null }
-    } )
-    document.addEventListener( `mousedown`, e => {
-      let c = this.camera
-
-      c.mouse.initialX = e.clientX
-      c.mouse.initialY = e.clientY
-
-      let x = Math.floor( (e.clientX - c.x) / tileSize )
-      let y = Math.floor( (e.clientY - c.y) / tileSize )
-
-      if ( (this.map.data[ y ]  ||  [])[ x ] ) {
-        c.mouse.action = `move-chessman`
-        this.changePosition.from = { x, y }
-      }
-      else
-        c.mouse.action = `move-camera`
-    } )
-    document.addEventListener( `mousemove`, e => {
+    ws.send( `game-init`, `chess-standard` )
+    ws.on( `game-init`, ( { chessmanSize, player, map } ) => {
+      const { width, height, tileSize } = map
       const c = this.camera
 
-      if ( c.mouse.action == `move-camera` ) {
-        let newX = e.clientX - c.mouse.initialX + c.x
-        let newY = e.clientY - c.mouse.initialY + c.y
+      console.log( player )
 
-        if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
-          c.x = newX
-        if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
-          c.y = newY
-      }
-      else if ( c.mouse.action == `move-chessman` ) {
+      this.chessmanSize = chessmanSize
+      this.player = new Player( player )
+      this.map = map
+      let md = this.map.data
+
+      for ( let y = 0;  y < height;  y++ )
+        for ( let x = 0;  x < width;  x++ ) {
+          if ( !map.data[ y ][ x ] )
+            continue
+
+          map.data[ y ][ x ] = new Pawn( x, y, map.data[ y ][ x ].color )
+        }
+
+      c.x = window.innerWidth / 2 - player.x * tileSize
+      c.y = window.innerHeight / 2 - player.y * tileSize
+  
+      if ( c.y > c.spaceAroundgame )
+        c.y = c.spaceAroundgame
+      else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
+        c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
+      if ( c.x > c.spaceAroundgame )
+        c.x = c.spaceAroundgame
+      else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
+        c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
+
+      setInterval( () => {
+        this.logic()
+        requestAnimationFrame( () => this.draw() )
+      }, 1000 / 60 )
+
+      window.addEventListener( `resize`, () => this.resize() )
+      document.addEventListener( `mouseup`, () => {
+        let from = this.changePosition.from
+        let to = this.changePosition.to
+
+        if ( to.x !== null ) {
+          if ( md[ from.y ][ from.x ].move( to.x, to.y ) ) {
+            // md[ to.y ][ to.x ] = md[ from.y ][ from.x ]
+            // md[ from.y ][ from.x ] = null
+
+            ws.send( `game-player_update`, { from, to } )
+          }
+        }
+
+        this.camera.mouse.action = null
+        this.changePosition.from = { x:null, y:null }
+        this.changePosition.to = { x:null, y:null }
+      } )
+      document.addEventListener( `mousedown`, e => {
+        let c = this.camera
+
+        c.mouse.initialX = e.clientX
+        c.mouse.initialY = e.clientY
+
         let x = Math.floor( (e.clientX - c.x) / tileSize )
         let y = Math.floor( (e.clientY - c.y) / tileSize )
-        let entity = (this.map.data[ y ]  ||  [])[ x ]
 
-        if ( x >= 0 && y >= 0 && x < this.map.width && y < this.map.height && (!entity || entity.color == this.player.color ) )
-          this.changePosition.to = { x, y }
+        if ( (md[ y ]  ||  [])[ x ] ) {
+          c.mouse.action = `move-chessman`
+          this.changePosition.from = { x, y }
+        }
         else
-          this.changePosition.to = { x:null, y:null }
-      }
+          c.mouse.action = `move-camera`
+      } )
+      document.addEventListener( `mousemove`, e => {
+        const c = this.camera
 
-      c.mouse.initialX = e.clientX
-      c.mouse.initialY = e.clientY
+        if ( c.mouse.action == `move-camera` ) {
+          let newX = e.clientX - c.mouse.initialX + c.x
+          let newY = e.clientY - c.mouse.initialY + c.y
+
+          if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
+            c.x = newX
+          if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
+            c.y = newY
+        }
+        else if ( c.mouse.action == `move-chessman` ) {
+          let x = Math.floor( (e.clientX - c.x) / tileSize )
+          let y = Math.floor( (e.clientY - c.y) / tileSize )
+          let entity = (md[ y ]  ||  [])[ x ]
+
+          if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || entity.color == player.color ) )
+            this.changePosition.to = { x, y }
+          else
+            this.changePosition.to = { x:null, y:null }
+        }
+
+        c.mouse.initialX = e.clientX
+        c.mouse.initialY = e.clientY
+      } )
+      ws.on( `game-update_positions`, jumpsfromTo => {
+        for ( const { from, to } of jumpsfromTo ) {
+          md[ to.y ][ to.x ] = md[ from.y ][ from.x ]
+          md[ from.y ][ from.x ] = null
+        }
+      } )
     } )
   }
 
@@ -222,19 +181,19 @@ export default class Game {
 
     let cameraJump = m.tileSize / 2
 
-    if ( Game.key( p.control.mapUp ) && c.y < c.spaceAroundgame )
+    if ( Game.key( `w` ) && c.y < c.spaceAroundgame )
       c.y += cameraJump
-    if ( Game.key( p.control.mapDown ) && c.y > window.innerHeight - c.spaceAroundgame - m.height * m.tileSize )
+    if ( Game.key( `s` ) && c.y > window.innerHeight - c.spaceAroundgame - m.height * m.tileSize )
       c.y -= cameraJump
-    if ( Game.key( p.control.mapLeft ) && c.x < c.spaceAroundgame )
+    if ( Game.key( `a` ) && c.x < c.spaceAroundgame )
       c.x += cameraJump
-    if ( Game.key( p.control.mapRight ) && c.x > window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
+    if ( Game.key( `d` ) && c.x > window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
       c.x -= cameraJump
 
-    ws.send( `game-player_update`, {
-      x: this.player.x,
-      y: this.player.y
-    } )
+    // ws.send( `game-player_update`, {
+    //   x: this.player.x,
+    //   y: this.player.y
+    // } )
   }
 
   draw() {
@@ -247,7 +206,7 @@ export default class Game {
 
     ctx.strokeStyle = `white`
     ctx.lineWidth = 1
-    
+
     for ( let y = 0;  y < m.height;  y++ )
       for ( let x = 0;  x < m.width;  x++ ) {
         if ( (y + x) % 2 ) {
