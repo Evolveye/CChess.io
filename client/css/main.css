@@ -1,5 +1,4 @@
 body {
-  background-color: #777;
   overflow: hidden;
   margin: 0;
   font-family: monospace;
@@ -7,6 +6,7 @@ body {
 body > * {
   position: absolute;
   color: #FFFFFFBB;
+  background-color: #333
 }
 
 .chat {
@@ -22,6 +22,7 @@ body > * {
 .canvas-main {
   width: 100vw;
   height: 100vh;
+  background-color: #666
 }
 
 .server_connection {

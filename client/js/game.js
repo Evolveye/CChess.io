@@ -40,6 +40,7 @@ export default class Game {
 
     /* *
      * Structure */
+    
     this.box = document.querySelector( `.game` )
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
@@ -54,35 +55,46 @@ export default class Game {
     /* *
      * Data */
 
-    this.player = new Player(
-      random( 1, width ),
-      random( 1, height ),
+    let x = random( 1, width )
+    let y = random( 1, height )
+    this.map = { 
+      width,
+      height,
+      tileSize,
+      data: [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => null ) )
+    }
+
+    this.player = this.map.data[ y ][ x ] = new Player(
+      x,
+      y,
       playerMovingTimestamp,
       randomColor(),
       playerControling
     )
 
-    this.chessPieces = []
-
     this.camera = {
       spaceAroundgame: 100,
       x: window.innerWidth / 2 - this.player.x * tileSize,
       y: window.innerHeight / 2 - this.player.y * tileSize,
-      mouse: { down:false, initialX:null, initialY:null }
+      mouse: { action:null, initialX:null, initialY:null }
     }
-    this.map = { tileSize, width, height }
+
+    this.changePosition = {
+      from: { x:null, y:null },
+      to: { x:null, y:null }
+    }
+
 
 
     let c = this.camera
-    let m = this.map
     if ( c.y > c.spaceAroundgame )
       c.y = c.spaceAroundgame
-    else if ( c.y < window.innerHeight - c.spaceAroundgame - m.height * m.tileSize )
-      c.y = window.innerHeight - c.spaceAroundgame - m.height * m.tileSize
+    else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
+      c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
     if ( c.x > c.spaceAroundgame )
       c.x = c.spaceAroundgame
-    else if ( c.x < window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
-      c.x = window.innerWidth - c.spaceAroundgame - m.width * m.tileSize
+    else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
+      c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
 
 
 
@@ -111,31 +123,60 @@ export default class Game {
     }, 1000 / 60 )
 
     window.addEventListener( `resize`, () => this.resize() )
-    document.addEventListener( `mouseup`, () => this.camera.mouse.down = false )
-    document.addEventListener( `mousedown`, e => {
-      let m = this.camera.mouse
+    document.addEventListener( `mouseup`, () => {
+      let startPos = this.changePosition.from
+      let endPos = this.changePosition.to
+      let map = this.map.data
 
-      m.down = true
-      m.initialX = e.clientX
-      m.initialY = e.clientY
+      if ( endPos.x !== null ) {
+        if ( map[ startPos.y ][ startPos.x ].move( endPos.x, endPos.y ) ) {
+          map[ endPos.y ][ endPos.x ] = map[ startPos.y ][ startPos.x ]
+          map[ startPos.y ][ startPos.x ] = null
+        }
+      }
+
+      this.camera.mouse.action = null
+      this.changePosition.from = { x:null, y:null }
+      this.changePosition.to = { x:null, y:null }
     } )
-    
+    document.addEventListener( `mousedown`, e => {
+      let c = this.camera
+
+      c.mouse.initialX = e.clientX
+      c.mouse.initialY = e.clientY
+
+      let x = Math.floor( (e.clientX - c.x) / tileSize )
+      let y = Math.floor( (e.clientY - c.y) / tileSize )
+
+      if ( (this.map.data[ y ]  ||  [])[ x ] ) {
+        c.mouse.action = `move-chessman`
+        this.changePosition.from = { x, y }
+      }
+      else
+        c.mouse.action = `move-camera`
+    } )
     document.addEventListener( `mousemove`, e => {
       const c = this.camera
-      const m = this.map
 
-      if ( !c.mouse.down )
-        return
+      if ( c.mouse.action == `move-camera` ) {
+        let newX = e.clientX - c.mouse.initialX + c.x
+        let newY = e.clientY - c.mouse.initialY + c.y
 
-      let newX = e.clientX - c.mouse.initialX + c.x
-      let newY = e.clientY - c.mouse.initialY + c.y
+        if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
+          c.x = newX
+        if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
+          c.y = newY
+      }
+      else if ( c.mouse.action == `move-chessman` ) {
+        let x = Math.floor( (e.clientX - c.x) / tileSize )
+        let y = Math.floor( (e.clientY - c.y) / tileSize )
+        let entity = (this.map.data[ y ]  ||  [])[ x ]
 
-      console.log( window.innerHeight / 2 - m.height * m.tileSize , newY )
-
-      if ( window.innerWidth - c.spaceAroundgame - m.width * m.tileSize < newX && newX < c.spaceAroundgame )
-        c.x = newX
-      if ( window.innerHeight - c.spaceAroundgame - m.height * m.tileSize < newY && newY < c.spaceAroundgame )
-        c.y = newY
+        if ( x >= 0 && y >= 0 && x < this.map.width && y < this.map.height && (!entity || entity.color == this.player.color ) )
+          this.changePosition.to = { x, y }
+        else
+          this.changePosition.to = { x:null, y:null }
+      }
 
       c.mouse.initialX = e.clientX
       c.mouse.initialY = e.clientY
@@ -147,28 +188,30 @@ export default class Game {
     const c = this.camera
     const p = this.player
 
-    if ( p.canMove && Game.key( p.control.wantToMove ) ) {
-      if ( Game.key( p.control.left ) && p.x > 1 )
-        p.x--
-      else if ( Game.key( p.control.right ) && p.x < m.width )
-        p.x++
-      else if ( Game.key( p.control.up ) && p.y > 1 )
-        p.y--
-      else if ( Game.key( p.control.down ) && p.y < m.height )
-        p.y++
+    // if ( p.canMove && Game.key( p.control.wantToMove ) ) {
+    //   if ( Game.key( p.control.left ) && p.x > 1 )
+    //     p.x--
+    //   else if ( Game.key( p.control.right ) && p.x < m.width )
+    //     p.x++
+    //   else if ( Game.key( p.control.up ) && p.y > 1 )
+    //     p.y--
+    //   else if ( Game.key( p.control.down ) && p.y < m.height )
+    //     p.y++
 
-      p.canMove = false
-      setTimeout( () => p.canMove = true, p.movingTimestamp )
-    }
+    //   p.canMove = false
+    //   setTimeout( () => p.canMove = true, p.movingTimestamp )
+    // }
+
+    let cameraJump = m.tileSize / 2
 
     if ( Game.key( p.control.mapUp ) && c.y < c.spaceAroundgame )
-      c.y += m.tileSize / 2
+      c.y += cameraJump
     if ( Game.key( p.control.mapDown ) && c.y > window.innerHeight - c.spaceAroundgame - m.height * m.tileSize )
-      c.y -= m.tileSize / 2
+      c.y -= cameraJump
     if ( Game.key( p.control.mapLeft ) && c.x < c.spaceAroundgame )
-      c.x += m.tileSize / 2
+      c.x += cameraJump
     if ( Game.key( p.control.mapRight ) && c.x > window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
-      c.x -= m.tileSize / 2
+      c.x -= cameraJump
 
     ws.send( `game-player_update`, {
       x: this.player.x,
@@ -178,49 +221,44 @@ export default class Game {
 
   draw() {
     const m = this.map
-    const p = this.player
     const c = this.camera
     const ctx = this.ctx
     const tSize = m.tileSize
 
     ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
 
-
-
-    /* *
-     * Map */
-
-    ctx.fillStyle = `#333`
-    for ( let y = 0;  y < m.height;  y++ )
-      for ( let x = y % 2;  x < m.width;  x += 2 ) {
-        ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
-      }
-
-
-    
-    /* *
-     * Entities */
-
     ctx.strokeStyle = `white`
     ctx.lineWidth = 1
+    
+    for ( let y = 0;  y < m.height;  y++ )
+      for ( let x = 0;  x < m.width;  x++ ) {
+        if ( (y + x) % 2 ) {
+          ctx.fillStyle = `#333`
+          ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+        }
 
-    const allEntities = [ ...this.chessPieces, p ]
-    for ( const e of allEntities ) {
-      ctx.fillStyle = `#000`
-      ctx.beginPath()
-      ctx.arc( c.x + (e.x - .5) * tSize, c.y + (e.y - .5) * tSize, 15, 0, Math.PI * 2 )
-      ctx.closePath()
-      ctx.fill()
+        const entity = m.data[ y ][ x ]
 
-      if ( e.id === p.id )
-        ctx.stroke()
-  
-      ctx.fillStyle = e.color
-      ctx.beginPath()
-      ctx.arc( c.x + (e.x - .5) * tSize, c.y + (e.y - .5) * tSize, 5, 0, Math.PI * 2 )
-      ctx.closePath()
-      ctx.fill()
-    }
+        if ( !entity )
+          continue
+
+        let eX = c.x + (x + .5) * tSize
+        let eY = c.y + (y + .5) * tSize
+
+        ctx.beginPath()
+        ctx.arc( eX, eY, 15, 0, Math.PI * 2 )
+        ctx.fillStyle = `#000`
+        ctx.fill()
+    
+        if ( entity.id === this.player.id )
+          ctx.stroke()
+      
+        ctx.moveTo( eX, eY )
+        ctx.beginPath()
+        ctx.arc( eX, eY, 5, 0, Math.PI * 2 )
+        ctx.fillStyle = entity.color
+        ctx.fill()
+      }
   }
 
   resize() {

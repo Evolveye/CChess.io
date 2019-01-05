@@ -1,12 +1,15 @@
 
 
 class Chessman {
-  constructor( x, y, color ) {
+  constructor( x, y, color, src ) {
     this.id = Math.random()
     this.x = x
     this.y = y
 
     this.color = color
+
+    this.tex = new Image
+    // this.tex.src = src
   }
 
   move() {
@@ -20,6 +23,8 @@ export class Pawn extends Chessman {
   }
 
   move( x, y ) {
+    return true
+
     if ( !!x == !!y )
       return
     if ( x && (x == this.x + 1 || x == this.x - 1) )
