@@ -3,7 +3,7 @@ import ws from "./ws.js"
 const chatbox = document.querySelector( `.chat` )
 chatbox.innerHTML = /* html */ `
   <div class="chat-messages"></div>
-  <input class="chat-input">
+  <input maxlength="127" class="chat-input">
 `
 
 const chatMessages = chatbox.querySelector( `.chat-messages` )
