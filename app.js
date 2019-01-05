@@ -11,6 +11,7 @@ const mimeTypes = {
   html: `text/html`,
   css: `text/css`,
   ico: `image/x-icon`,
+  png: `image/png`,
   js: `text/javascript`
 }
 

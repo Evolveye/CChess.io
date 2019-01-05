@@ -4,13 +4,33 @@ import { Pawn } from "./chessPieces.js"
 function random( min, max ) {
   return Math.floor( Math.random() * (max - min) ) + min
 }
-function randomColor() {
-  let color = (Math.random()*0xFFFFFF << 0).toString(16)
 
-  while ( color.length < 6 )
-    color = `0${color}`
+class Color {
+  constructor( hex ) {
+    this.r = random( 0, 255 )
+    this.g = random( 0, 255 )
+    this.b = random( 0, 255 )
 
-  return `#${color}`
+    if ( typeof hex == `boolean` ) {
+      hex = (Math.random()*0xFFFFFF << 0).toString(16)
+    
+      while ( hex.length < 6 )
+        hex = `0${hex}`
+    
+      hex = `#${hex}`
+    }
+
+    if ( hex ) {
+      this.r = parseInt( hex.slice( 1, 3 ), 16 )
+      this.g = parseInt( hex.slice( 3, 5 ), 16 )
+      this.b = parseInt( hex.slice( 5, 7 ), 16 )
+    }
+  }
+
+  [Symbol.toPrimitive]( hint ) {
+    if ( hint === 'string' )
+      return `#${this.r}${this.g}${this.b}`
+  }
 }
 
 class Player extends Pawn {
@@ -36,7 +56,7 @@ class Player extends Pawn {
 }
 
 export default class Game {
-  constructor( width, height, tileSize, playerMovingTimestamp, playerControling ) {
+  constructor( width, height, tileSize, chessmanSize, playerMovingTimestamp, playerControling ) {
 
     /* *
      * Structure */
@@ -65,11 +85,7 @@ export default class Game {
     }
 
     this.player = this.map.data[ y ][ x ] = new Player(
-      x,
-      y,
-      playerMovingTimestamp,
-      randomColor(),
-      playerControling
+      x, y, playerMovingTimestamp, new Color( true ), playerControling
     )
 
     this.camera = {
@@ -83,6 +99,8 @@ export default class Game {
       from: { x:null, y:null },
       to: { x:null, y:null }
     }
+
+    this.chessmanSize = chessmanSize
 
 
 
@@ -242,28 +260,32 @@ export default class Game {
         if ( !entity )
           continue
 
-        let eX = c.x + (x + .5) * tSize
-        let eY = c.y + (y + .5) * tSize
+        let eX = c.x + (x + .5) * tSize - this.chessmanSize / 2
+        let eY = c.y + (y + .5) * tSize - this.chessmanSize / 2
 
-        ctx.beginPath()
-        ctx.arc( eX, eY, 15, 0, Math.PI * 2 )
-        ctx.fillStyle = `#000`
-        ctx.fill()
+        ctx.drawImage( entity.tex, eX, eY, this.chessmanSize, this.chessmanSize )
+
+        // ctx.beginPath()
+        // ctx.arc( eX, eY, 15, 0, Math.PI * 2 )
+        // ctx.fillStyle = `#000`
+        // ctx.fill()
     
-        if ( entity.id === this.player.id )
-          ctx.stroke()
+        // if ( entity.id === this.player.id )
+        //   ctx.stroke()
       
-        ctx.moveTo( eX, eY )
-        ctx.beginPath()
-        ctx.arc( eX, eY, 5, 0, Math.PI * 2 )
-        ctx.fillStyle = entity.color
-        ctx.fill()
+        // ctx.moveTo( eX, eY )
+        // ctx.beginPath()
+        // ctx.arc( eX, eY, 5, 0, Math.PI * 2 )
+        // ctx.fillStyle = `${entity.color}`
+        // ctx.fill()
       }
   }
 
   resize() {
     this.canvas.width = window.innerWidth
     this.canvas.height = window.innerHeight
+
+    this.ctx.imageSmoothingEnabled = false
   }
 
   static key( key ) {
