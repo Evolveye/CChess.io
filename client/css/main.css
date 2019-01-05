@@ -6,7 +6,8 @@ body {
 body > * {
   position: absolute;
   color: #FFFFFFBB;
-  background-color: #333
+  background-color: #333;
+  user-select: none;
 }
 
 .chat {
