@@ -17,11 +17,9 @@ const mimeTypes = {
 
 const server = http
   .createServer( (req, res) => {
-    let address = /\/\/?/.test( req.url )  ?  `/index.html`  :  req.url
+    let address = /^\/\/?$/.test( req.url )  ?  `/index.html`  :  req.url
     let mimeType = mimeTypes[ address.split( /.*\./ )[ 1 ] ]
     let file = null
-
-    console.log( { address:`./client${address}`, "req.url":req.url, mimeType } )
 
     if ( fs.existsSync( `./client${address}` ) )
       file = fs.readFileSync( `./client${address}` )
