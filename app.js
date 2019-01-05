@@ -24,6 +24,8 @@ const server = http
     if ( fs.existsSync( `./client${address}` ) )
       file = fs.readFileSync( `./client${address}` )
 
+    console.log( `./client${address}`, mimeType )
+
     res.writeHead( 200, { "Content-Type":mimeType } )
     res.end( file )
   } )

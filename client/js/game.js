@@ -82,7 +82,6 @@ export default class Game {
         let from = this.changePosition.from
         let to = this.changePosition.to
 
-        console.log( from, to )
         if ( to.x !== null ) {
           if ( md[ from.y ][ from.x ].move( to.x, to.y ) ) {
             ws.send( `game-player_update`, { from, to } )
@@ -103,8 +102,10 @@ export default class Game {
         let y = Math.floor( (e.clientY - c.y) / tileSize )
 
         if ( (md[ y ]  ||  [])[ x ] ) {
-          c.mouse.action = `move-chessman`
-          this.changePosition.from = { x, y }
+          if ( md[ y ][ x ].color === player.color ) {
+            c.mouse.action = `move-chessman`
+            this.changePosition.from = { x, y }
+          }
         }
         else
           c.mouse.action = `move-camera`
@@ -126,7 +127,7 @@ export default class Game {
           let y = Math.floor( (e.clientY - c.y) / tileSize )
           let entity = (md[ y ]  ||  [])[ x ]
 
-          if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || entity.color == player.color ) )
+          if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || entity.color == `#` ) )
             this.changePosition.to = { x, y }
           else
             this.changePosition.to = { x:null, y:null }
