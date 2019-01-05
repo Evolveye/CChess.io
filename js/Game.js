@@ -147,10 +147,7 @@ module.exports = class Game {
         const map = this.map.data
 
         let mapField = map[ from.y ]  ?  map[ from.y ][ from.x ]  :  null
-        console.log( from, to )
-
         if ( appWs.room == `chess-standard` && mapField && mapField.move( to.x, to.y ) ) {
-          console.log( true )
           map[ to.y ][ to.x ] = map[ from.y ][ from.x ]
           map[ from.y ][ from.x ] = null
 

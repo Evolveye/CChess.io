@@ -8,19 +8,6 @@ class Player extends Pawn {
     this.id = id
     this.canMove = true
     this.movingTimestamp = movingTimestamp
-
-    // this.control = {
-    //   up: controling === `wsad`  ?  `w`  :  `up`,
-    //   down: controling === `wsad`  ?  `s`  :  `down`,
-    //   left: controling === `wsad`  ?  `a`  :  `left`,
-    //   right: controling === `wsad`  ?  `d`  :  `right`,
-    //   wantToMove: controling === `wsad`  ?  `wsad`  :  `arrow`,
-
-    //   mapUp: controling === `wsad`  ?  `up`  :  `w`,
-    //   mapDown: controling === `wsad`  ?  `down`  :  `s`,
-    //   mapLeft: controling === `wsad`  ?  `left`  :  `a`,
-    //   mapRight: controling === `wsad`  ?  `right`  :  `d`,
-    // }
   }
 }
 
@@ -98,9 +85,6 @@ export default class Game {
         console.log( from, to )
         if ( to.x !== null ) {
           if ( md[ from.y ][ from.x ].move( to.x, to.y ) ) {
-            // md[ to.y ][ to.x ] = md[ from.y ][ from.x ]
-            // md[ from.y ][ from.x ] = null
-
             ws.send( `game-player_update`, { from, to } )
           }
         }
@@ -171,20 +155,6 @@ export default class Game {
     const c = this.camera
     const p = this.player
 
-    // if ( p.canMove && Game.key( p.control.wantToMove ) ) {
-    //   if ( Game.key( p.control.left ) && p.x > 1 )
-    //     p.x--
-    //   else if ( Game.key( p.control.right ) && p.x < m.width )
-    //     p.x++
-    //   else if ( Game.key( p.control.up ) && p.y > 1 )
-    //     p.y--
-    //   else if ( Game.key( p.control.down ) && p.y < m.height )
-    //     p.y++
-
-    //   p.canMove = false
-    //   setTimeout( () => p.canMove = true, p.movingTimestamp )
-    // }
-
     let cameraJump = m.tileSize / 2
 
     if ( Game.key( `w` ) && c.y < c.spaceAroundgame )
@@ -195,11 +165,6 @@ export default class Game {
       c.x += cameraJump
     if ( Game.key( `d` ) && c.x > window.innerWidth - c.spaceAroundgame - m.width * m.tileSize )
       c.x -= cameraJump
-
-    // ws.send( `game-player_update`, {
-    //   x: this.player.x,
-    //   y: this.player.y
-    // } )
   }
 
   draw() {
@@ -229,20 +194,6 @@ export default class Game {
         let eY = c.y + (y + .5) * tSize - this.chessmanSize / 2
 
         ctx.drawImage( entity.tex, eX, eY, this.chessmanSize, this.chessmanSize )
-
-        // ctx.beginPath()
-        // ctx.arc( eX, eY, 15, 0, Math.PI * 2 )
-        // ctx.fillStyle = `#000`
-        // ctx.fill()
-    
-        // if ( entity.id === this.player.id )
-        //   ctx.stroke()
-      
-        // ctx.moveTo( eX, eY )
-        // ctx.beginPath()
-        // ctx.arc( eX, eY, 5, 0, Math.PI * 2 )
-        // ctx.fillStyle = `${entity.color}`
-        // ctx.fill()
       }
   }
 
