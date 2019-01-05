@@ -21,10 +21,10 @@ const server = http
     let mimeType = mimeTypes[ address.split( /.*\./ )[ 1 ] ]
     let file = null
 
+    console.log( `./client${address}`, mimeType )
+
     if ( fs.existsSync( `./client${address}` ) )
       file = fs.readFileSync( `./client${address}` )
-
-    console.log( `./client${address}`, mimeType )
 
     res.writeHead( 200, { "Content-Type":mimeType } )
     res.end( file )

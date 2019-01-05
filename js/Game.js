@@ -2,8 +2,6 @@ class Color {
   constructor( color ) {
 
     this.txtFormat = ``
-
-    console.log( color )
     
     if ( /#[0-9a-f]{6}/i.test( color ) ) {
       this.r = parseInt( color.slice( 1, 3 ), 16 )
