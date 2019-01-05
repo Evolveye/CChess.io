@@ -1,29 +1,22 @@
 class Color {
-  constructor( hex ) {
-    this.r = random( 0, 255 )
-    this.g = random( 0, 255 )
-    this.b = random( 0, 255 )
+  constructor( color ) {
 
     this.txtFormat = ``
 
-    if ( hex === true ) {
-      this.hex = true
-
-      hex = (Math.random()*0xFFFFFF << 0).toString(16)
+    console.log( color )
     
-      while ( hex.length < 6 )
-        hex = `0${hex}`
-    
-      this.txtFormat = `#${hex}`
+    if ( /#[0-9a-f]{6}/i.test( color ) ) {
+      this.r = parseInt( color.slice( 1, 3 ), 16 )
+      this.g = parseInt( color.slice( 3, 5 ), 16 )
+      this.b = parseInt( color.slice( 5, 7 ), 16 )
+      this.txtFormat = color
     }
-    else if ( typeof hex === `string` && hex[ 0 ] === `#` ) {
-      this.r = parseInt( hex.slice( 1, 3 ), 16 )
-      this.g = parseInt( hex.slice( 3, 5 ), 16 )
-      this.b = parseInt( hex.slice( 5, 7 ), 16 )
-      this.txtFormat = hex
-    }
-    else
+    else {
+      this.r = random( 0, 255 )
+      this.g = random( 0, 255 )
+      this.b = random( 0, 255 )
       this.txtFormat = `rgb( ${this.r}, ${this.g}, ${this.b} )`
+    }
   }
 
   [Symbol.toPrimitive]( hint ) {
@@ -37,7 +30,7 @@ class Chessman {
     this.id = Math.random()
     this.x = x
     this.y = y
-    this.color = color  ||  new Color( `#FFFFFF` )
+    this.color = new Color( color )
   }
 
   move() {
@@ -105,7 +98,7 @@ module.exports = class Game {
       let x = random( 0, this.map.width )
       let y = random( 0, this.map.height )
 
-      this.map.data[ y ][ x ] = new God( x, y )
+      this.map.data[ y ][ x ] = new God( x, y, `#FFFFFF` )
     }
 
     setInterval( () => {
@@ -132,7 +125,7 @@ module.exports = class Game {
         let x = random( 0, this.map.width )
         let y = random( 0, this.map.height )
         
-        let player = this.map.data[ y ][ x ] = new Player( x, y, this.playerMovingTimestamp )
+        let player = this.map.data[ y ][ x ] = new Player( x, y, this.playerMovingTimestamp, `random` )
         this.broadcastData.newChessPieces.push( player )
         appWs.send( `game-init`, {
           chessmanSize: this.chessmanSize,

@@ -77,7 +77,7 @@ wss.on( `connection`, ws => {
   ws.onmessage = e => {
     if ( ws.readyState !== 1 )
       return
-
+    console.log( e.data )
     const { type, data } = JSON.parse( e.data )
 
     if ( type === `$app-change_room`)
