@@ -40,6 +40,7 @@ class Chessman {
 
     ctx.putImageData( imgData, 0, 0 )
 
+    t.onload = null
     t.src = canvas.toDataURL()
   }
 
