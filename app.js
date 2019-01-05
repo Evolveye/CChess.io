@@ -17,7 +17,7 @@ const mimeTypes = {
 
 const server = http
   .createServer( (req, res) => {
-    let address = req.url === `/`  ?  `/index.html`  :  req.url
+    let address = /\/\/?/.test( req.url )  ?  `/index.html`  :  req.url
     let mimeType = mimeTypes[ address.split( /.*\./ )[ 1 ] ]
     let file = null
 
