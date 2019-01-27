@@ -1,10 +1,10 @@
 {
-  "name": "simplenode",
+  "name": "chess_multiplayer",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.mjs",
   "scripts": {
-    "start": "node app"
+    "start": "node --experimental-modules index"
   },
   "author": "",
   "license": "ISC",

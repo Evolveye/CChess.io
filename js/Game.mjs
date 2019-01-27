@@ -75,7 +75,7 @@ class Player extends Pawn {
   }
 }
 
-module.exports = class Game {
+export default class Game {
   constructor( appWss, width, height, tileSize, chessmanSize, playerMovingTimestamp ) {
     this.playerMovingTimestamp = playerMovingTimestamp
     this.chessmanSize = chessmanSize

@@ -1,10 +1,10 @@
 "use script"
 
-// Azure isn't supporting ES6 modules ¯\_(ツ)_/¯
-const http = require( `http` )
-const fs = require( `fs` )
-const WebSocket = require( `ws` )
-const Game = require(`./js/Game.js`)
+import http from "http"
+import fs from "fs"
+import WebSocket from "ws"
+
+import Game from "./js/Game.js"
 
 const port = process.env.PORT  ||  80
 const mimeTypes = {
