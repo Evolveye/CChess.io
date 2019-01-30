@@ -325,7 +325,6 @@ export default class Chessboard {
     if ( !this.checkJump( from, to ) )
       return false
 
-    console.log( nextField )
     if ( nextField && !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
       fields[ from.y ][ from.x ] = nextField
       nextField.x = from.x
