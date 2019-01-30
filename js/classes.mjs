@@ -5,15 +5,7 @@ export function setTexture( src, chessman ) {
   const c = chessman
 
   c.tex = new Image
-  console.log(
-    c.type,
-    c.type.charAt( 0 ),
-    c.type.charAt( 0 ).toUpperCase(),
-    c.type.substring( 1 ),
-    c.type.substring( 1 ).toLowerCase(),
-    `${src[ 0 ]}${c.type.charAt( 0 ).toUpperCase()}${c.type.substring( 1 ).toLowerCase()}${src[ 1 ]}`
-  )
-  c.tex.src = `${src[ 0 ]}${c.type.charAt( 0 ).toUpperCase()}${c.type.substring( 1 ).toLowerCase()}${src[ 1 ]}`
+  c.tex.src = `${src[ 0 ]}${c.type.toLowerCase()}${src[ 1 ]}`
 
   c.setTextureColor = color => {
     const t = c.tex
