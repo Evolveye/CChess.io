@@ -260,7 +260,10 @@ export default class Chessboard {
       for ( const field of row )
         if ( field ) {
           let { x, y, color, type, movingTimestamp } = field
-          this.set( type, x, y, color, movingTimestamp, isTextured )
+          const entity = this.set( type, x, y, color, movingTimestamp, isTextured )
+
+          if ( `id` in field )
+            entity.id = field.id
         }
   }
 
@@ -322,6 +325,7 @@ export default class Chessboard {
     if ( !this.checkJump( from, to ) )
       return false
 
+    console.log( nextField )
     if ( nextField && !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
       fields[ from.y ][ from.x ] = nextField
       nextField.x = from.x

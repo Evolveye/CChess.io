@@ -42,7 +42,6 @@ export default class Game {
       this.chessboard = new Chessboard( width, height, tileSize, fields, true )
 
       this.player = this.chessboard.get( player.x, player.y )
-      this.player.id = player.id
 
       player = this.player
       chessboard = this.chessboard
