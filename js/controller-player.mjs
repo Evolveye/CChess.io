@@ -22,6 +22,7 @@ export default class PlayerController {
     switch ( type ) {
       case `chat-new_message`:
         this.broadcast( `chat-new_message`, data )
+        this.send( `chat-new_message`, data )
         break
 
       case `game-init`:

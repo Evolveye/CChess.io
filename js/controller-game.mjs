@@ -1,10 +1,13 @@
-import Chessboard, { random } from "./classes.mjs"
+import Chessboard, { random, Color } from "./classes.mjs"
 
 export default class GameController {
   constructor( wssController ) {
     this.players = new Map
-    this.chessboard = new Chessboard( 40, 40, 50 )
+    this.chessboard = new Chessboard( 10, 10, 50 )
     this.jumps = []
+
+    for ( let i = 0;  i < 1;  i++ )
+      this.spawn( `pawn` )
 
     setInterval( () => {
       wssController.broadcast( `game-update-jumps`, this.jumps )
@@ -12,7 +15,7 @@ export default class GameController {
     }, 1000 / 60 )
   }
 
-  spawnPlayer( playerController, playerInitializer ) {
+  spawn( type, color=null ) {
     const cb = this.chessboard
     let x, y
 
@@ -21,7 +24,11 @@ export default class GameController {
       y = random( 0, cb.height )
     } while ( cb.get( x, y ) )
 
-    let player = cb.set( `player`, x, y, null, 100 )
+    return cb.set( type, x, y, color, 100 )
+  }
+
+  spawnPlayer( playerController, playerInitializer ) {
+    const player = this.spawn( `player`, new Color )
     player.id = playerController.id
 
     playerController.broadcast( `game-update-spawn`, player )
@@ -36,15 +43,21 @@ export default class GameController {
   }
   destroyPlayer( id ) {
     const player = this.players.get( id )
-    const { height, width } = this.chessboard
+    const cb = this.chessboard
+    const { height, width } = cb
+
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
-        const field = this.chessboard.get( x, y )
+        const field = cb.get( x, y )
 
         if ( field && field.color == player.color ) {
           player.broadcast( `game-update-despawn`, { x, y } )
-          this.chessboard.remove( x, y)
+
+          if ( !(`id` in field) )
+            player.broadcast( `game-update-spawn`, this.spawn( field.type ) )
+
+          cb.remove( x, y )
         }
       }
 

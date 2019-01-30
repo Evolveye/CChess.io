@@ -1,19 +1,7 @@
 import ws from "./ws.js"
-import Chessboard from "/$/classes"
+import Chessboard, { setTexture } from "/$/classes"
 // import Chessboard from "../../js/classes.mjs"
 
-const textures = {
-  pawn: new Image,
-  rook: new Image,
-  knight: new Image,
-  bishop: new Image,
-  king: new Image,
-  queen: new Image,
-  god: new Image
-}
-
-for ( const tex in textures )
-  textures[ tex ].src = `../img/${tex}.png`
 
 export default class Game {
   constructor() {
@@ -51,9 +39,9 @@ export default class Game {
       const c = this.camera
 
       this.chessmanSize = chessmanSize
-      this.chessboard = new Chessboard( width, height, tileSize, fields )
+      this.chessboard = new Chessboard( width, height, tileSize, fields, true )
 
-      this.player = this.chessboard.set( `player`, player.x, player.y, player.color, player.movingTimestamp )
+      this.player = this.chessboard.get( player.x, player.y )
       this.player.id = player.id
 
       player = this.player
@@ -75,6 +63,7 @@ export default class Game {
         this.logic()
         requestAnimationFrame( () => this.draw() )
       }, 1000 / 60 )
+      requestAnimationFrame( () => this.draw() )
 
       window.addEventListener( `resize`, () => this.resize() )
       document.addEventListener( `mouseup`, () => {
@@ -124,7 +113,7 @@ export default class Game {
           let y = Math.floor( (e.clientY - c.y) / tileSize )
           let entity = chessboard.get( x, y )
 
-          if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || entity.color == `#` ) )
+          if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || `${entity.color}` != `${player.color}` ) )
             this.changePosition.to = { x, y }
           else
             this.changePosition.to = { x:null, y:null }
@@ -134,8 +123,8 @@ export default class Game {
         c.mouse.initialY = e.clientY
       } )
       ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) => chessboard.move( from, to ) ) )
-      ws.on( `game-update-spawn`, ( { x, y, type, color } ) => chessboard.set( type, x, y, color ) )
-      ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
+      ws.on( `game-update-spawn`, ( { x, y, type, color } ) => chessboard.set( type, x, y, color, null, true ) )
+      ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ).id == player.id  ?  this.end()  :  null )
     } )
   }
 
@@ -161,19 +150,33 @@ export default class Game {
     const c = this.camera
     const ctx = this.ctx
     const tSize = cb.tileSize
+    const { from } = this.changePosition
 
     ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
 
     ctx.strokeStyle = `white`
     ctx.lineWidth = 1
 
+    ctx.fillStyle = `#333`
+
+    for ( let y = 0;  y < cb.height;  y++ )
+      for ( let x = 0;  x < cb.width;  x++ )
+        if ( (y + x) % 2 )
+          ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+
+    if ( this.changePosition.from.x ) {
+      const entity = cb.get( from.x, from.y )
+
+      if ( `${entity.color}` == `${this.player.color}`)
+
+      ctx.fillStyle = `${entity.color}11`
+
+      for ( const { x, y } of entity.availableFields( cb ) )
+        ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+    }
+
     for ( let y = 0;  y < cb.height;  y++ )
       for ( let x = 0;  x < cb.width;  x++ ) {
-        if ( (y + x) % 2 ) {
-          ctx.fillStyle = `#333`
-          ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
-        }
-
         const entity = cb.get( x, y )
 
         if ( !entity )
@@ -182,7 +185,7 @@ export default class Game {
         let eX = c.x + (x + .5) * tSize - this.chessmanSize / 2
         let eY = c.y + (y + .5) * tSize - this.chessmanSize / 2
 
-        ctx.drawImage( textures[ entity.type ], eX, eY, this.chessmanSize, this.chessmanSize )
+        ctx.drawImage( entity.tex, eX, eY, this.chessmanSize, this.chessmanSize )
       }
   }
 

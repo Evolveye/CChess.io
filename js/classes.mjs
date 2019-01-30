@@ -1,12 +1,56 @@
 export function random( min, max ) {
   return Math.floor( Math.random() * (max - min) ) + min
 }
+export function setTexture( src, chessman ) {
+  const c = chessman
+
+  c.tex = new Image
+  c.tex.src = `${src[ 0 ]}${c.type.charAt( 0 ).toUpperCase()}${c.type.substring( 1 ).toLowerCase()}${src[ 1 ]}`
+
+  c.setTextureColor = color => {
+    const t = c.tex
+
+    let canvas = document.createElement( `canvas` )
+    canvas.width = t.width
+    canvas.height = t.height
+
+    let ctx = canvas.getContext( `2d` )
+
+    ctx.drawImage( t, 0, 0 )
+
+    let imgData = ctx.getImageData( 0, 0, t.width, t.height )
+
+    for ( let y = 0;  y < imgData.height;  y++ )
+      for ( let x = 0;  x < imgData.width * 4;  x += 4  ) {
+        const pixelStart = y * imgData.width * 4 + x + 0
+
+        const r = imgData.data[ pixelStart + 0 ]
+        const g = imgData.data[ pixelStart + 1 ]
+        const b = imgData.data[ pixelStart + 2 ]
+        const a = imgData.data[ pixelStart + 3 ] / 255
+
+        if ( r != 0 && g != 0 && b != 0 && a == 1 ) {
+          imgData.data[ pixelStart + 0 ] = color.r
+          imgData.data[ pixelStart + 1 ] = color.g
+          imgData.data[ pixelStart + 2 ] = color.b
+        }
+      }
+
+    ctx.putImageData( imgData, 0, 0 )
+
+    t.onload = null
+    t.src = canvas.toDataURL()
+  }
+
+  c.tex.onload = () => c.setTextureColor( c.color )
+}
+
 export class Color {
   constructor( color ) {
 
     this.txtFormat = ``
 
-    if ( color instanceof Color ) {
+    if ( color && color.r && color.g && color.b ) {
       this.r = color.r
       this.g = color.g
       this.b = color.b
@@ -22,7 +66,13 @@ export class Color {
       this.b = random( 0, 255 )
     }
 
-    this.txtFormat = `#${this.r.toString( 16 )}${this.g.toString( 16 )}${this.b.toString( 16 )}`
+    let formater = colorComponent => {
+      let color = this[ colorComponent ].toString( 16 )
+
+      return color.length == 2  ?  color  :  `0${color}`
+    }
+
+    this.txtFormat = `#${formater( `r` )}${formater( `g` )}${formater( `b` )}`
   }
 
   [Symbol.toPrimitive]( hint ) {
@@ -31,11 +81,10 @@ export class Color {
   }
 }
 class Chessman {
-  constructor( x, y, color=`#FFFFFF`, movingTimestamp=1000, type ) {
-    this.id = Math.random()
+  constructor( x, y, color, movingTimestamp=1000, type ) {
     this.x = x
     this.y = y
-    this.color = new Color( color )
+    this.color = new Color( color || `#FFFFFF` )
     this.movingTimestamp = movingTimestamp
     this.lastJump = 0
     this.type = type
@@ -76,20 +125,21 @@ class Pawn extends Chessman {
   /** @param {Chessboard} chessboard (Chess instance).fields */
   availableFields( chessboard ) {
     const availableFields = []
-    const get = chessboard.get
-    const push = availableFields.push
 
-    if ( !g( this.x + 1, this.y ) )
-      push( { x:(this.x + 1), y:this.y } )
+    let cb = chessboard
+    let f = availableFields
 
-    if ( !g( this.x - 1, y ) )
-      push( { x:(this.x - 1), y:this.y } )
+    if ( !cb.get( this.x + 1, this.y ) )
+      f.push( { x:(this.x + 1), y:this.y } )
 
-    if ( !g( this.x, this.y + 1 ) )
-      push( { x:this.x, y:(this.y + 1) } )
+    if ( !cb.get( this.x - 1, this.y ) )
+      f.push( { x:(this.x - 1), y:this.y } )
 
-    if ( !g( this.x, this.y - 1 ) )
-      push( { x:this.x, y:(this.y - 1) } )
+    if ( !cb.get( this.x, this.y + 1 ) )
+      f.push( { x:this.x, y:(this.y + 1) } )
+
+    if ( !cb.get( this.x, this.y - 1 ) )
+      f.push( { x:this.x, y:(this.y - 1) } )
 
     return availableFields
   }
@@ -198,7 +248,7 @@ class Player extends God {
 }
 
 export default class Chessboard {
-  constructor( width, height, tileSize, fields=[] ) {
+  constructor( width, height, tileSize, fields=[], isTextured ) {
     this.width = width
     this.height = height
     this.tileSize = tileSize
@@ -206,18 +256,19 @@ export default class Chessboard {
     /** @type {Chessman[][]} */
     this.fields = [ ...Array( height ) ].map( () => Array( width ).fill( null ) )
 
-    for ( const field of fields )
-      if ( field ) {
-        let { x, y, color, type, movingTimestamp } = field
-        this.set( type, x, y, color, movingTimestamp )
-      }
+    for ( const row of fields )
+      for ( const field of row )
+        if ( field ) {
+          let { x, y, color, type, movingTimestamp } = field
+          this.set( type, x, y, color, movingTimestamp, isTextured )
+        }
   }
 
   get( x, y ) {
     return (this.fields[ y ] || [])[ x ]
   }
 
-  set( type, x, y, color, movingTimestamp ) {
+  set( type, x, y, color, movingTimestamp, isTextured ) {
     const field = this.get( x, y )
     const instance = ( () => { switch ( type ) { // `${type.charAt( 0 ).toUpperCase()}${type.slice( 1 ).toLoverCase()}`
       case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
@@ -233,23 +284,30 @@ export default class Chessboard {
     if ( field || !instance )
       return null
 
+    if ( isTextured )
+      setTexture`../img/${instance}.png`
+
     this.fields[ y ][ x ] = instance
 
     return instance
   }
 
   remove( x, y ) {
+    const field = this.fields[ y ][ x ]
+
     this.fields[ y ][ x ] = null
+
+    return field
   }
 
   checkJump( from, to ) {
     const chessman = this.get( from.x, from.y )
     const nextField = this.get( to.x, to.y )
 
-    if ( !chessman || !chessman.checkJump( to.x, to.y, this ) || nextField === undefined )
+    if ( !chessman || !chessman.checkJump( to, this ) || nextField === undefined )
       return false
 
-    if ( nextField && `${nextField.color}` == `${chessman.color}` )
+    if ( nextField && (`${nextField.color}` == `${chessman.color}`) )
       return false
 
     return true
@@ -264,14 +322,23 @@ export default class Chessboard {
     if ( !this.checkJump( from, to ) )
       return false
 
-    if ( nextField && `${nextField.color}` != `${chessman.color}` ) {
+    if ( nextField && !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
       fields[ from.y ][ from.x ] = nextField
+      nextField.x = from.x
+      nextField.y = from.y
+      nextField.lastJump = Date.now()
       nextField.color = chessman.color
+
+      if ( `setTextureColor` in nextField )
+        nextField.setTextureColor( chessman.color )
     }
     else
       fields[ from.y ][ from.x ] = null
 
     fields[ to.y ][ to.x ] = chessman
+    chessman.x = to.x
+    chessman.y = to.y
+    chessman.lastJump = Date.now()
 
     return true
   }
