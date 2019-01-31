@@ -347,7 +347,8 @@ export default class Chessboard {
     chessman.y = to.y
     chessman.lastJump = Date.now()
 
-    return nextField  ?  nextField.id  :  true
+
+    return (nextField || {}).id || true
   }
 
   isABeatableField( x, y, entity ) {
@@ -356,7 +357,6 @@ export default class Chessboard {
     return field !== undefined && `${(field || {}).color}` != `${entity.color}`
   }
 }
-
 
 Chessboard.Pawn   = Pawn
 Chessboard.Rook   = Rook
