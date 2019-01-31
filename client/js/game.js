@@ -121,9 +121,11 @@ export default class Game {
         c.mouse.initialX = e.clientX
         c.mouse.initialY = e.clientY
       } )
-      ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) => chessboard.move( from, to ) ) )
-      ws.on( `game-update-spawn`, ( { x, y, type, color } ) => chessboard.set( type, x, y, color, null, true ) )
-      ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ).id == player.id  ?  this.end()  :  null )
+      ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
+      ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
+      ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) =>
+        chessboard.move( from, to ) === player.id  ?  this.end()  :  null
+      ) )
     } )
   }
 
@@ -163,12 +165,12 @@ export default class Game {
         if ( (y + x) % 2 )
           ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
 
-    if ( this.changePosition.from.x ) {
+    if ( this.changePosition.from.x != null ) {
       const entity = cb.get( from.x, from.y )
 
-      if ( `${entity.color}` == `${this.player.color}`)
+      // if ( `${entity.color}` == `${this.player.color}`)
 
-      ctx.fillStyle = `${entity.color}11`
+      ctx.fillStyle = `${entity.color}22`
 
       for ( const { x, y } of entity.availableFields( cb ) )
         ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
@@ -193,6 +195,10 @@ export default class Game {
     this.canvas.height = window.innerHeight
 
     this.ctx.imageSmoothingEnabled = false
+  }
+
+  end() {
+    alert( `game over` )
   }
 
   static key( key ) {

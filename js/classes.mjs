@@ -129,17 +129,17 @@ class Pawn extends Chessman {
     let cb = chessboard
     let f = availableFields
 
-    if ( !cb.get( this.x + 1, this.y ) )
-      f.push( { x:(this.x + 1), y:this.y } )
-
-    if ( !cb.get( this.x - 1, this.y ) )
+    if ( cb.isABeatableField( this.x - 1, this.y, this ) )
       f.push( { x:(this.x - 1), y:this.y } )
 
-    if ( !cb.get( this.x, this.y + 1 ) )
-      f.push( { x:this.x, y:(this.y + 1) } )
+    if ( cb.isABeatableField( this.x + 1, this.y, this ) )
+      f.push( { x:(this.x + 1), y:this.y } )
 
-    if ( !cb.get( this.x, this.y - 1 ) )
+    if ( cb.isABeatableField( this.x, this.y - 1, this ) )
       f.push( { x:this.x, y:(this.y - 1) } )
+
+    if ( cb.isABeatableField( this.x, this.y + 1, this ) )
+      f.push( { x:this.x, y:(this.y + 1) } )
 
     return availableFields
   }
@@ -228,7 +228,7 @@ class God extends Chessman {
 
     for ( let y = 0;  y < chessboard.height;  y++ )
       for ( let x = 0;  x < chessboard.width;  x++ )
-        if ( !chessboard.fields[ y ][ x ] )
+        if ( chessboard.isABeatableField( x, y, this ) )
           availableFields.push( { x, y } )
 
     return availableFields
@@ -260,7 +260,7 @@ export default class Chessboard {
       for ( const field of row )
         if ( field ) {
           let { x, y, color, type, movingTimestamp } = field
-          const entity = this.set( type, x, y, color, movingTimestamp, isTextured )
+          const entity = this.set( { type, x, y, color, movingTimestamp }, isTextured )
 
           if ( `id` in field )
             entity.id = field.id
@@ -271,7 +271,8 @@ export default class Chessboard {
     return (this.fields[ y ] || [])[ x ]
   }
 
-  set( type, x, y, color, movingTimestamp, isTextured ) {
+  set( entity, isTextured ) {
+    const { type, x, y, color, movingTimestamp } = entity
     const field = this.get( x, y )
     const instance = ( () => { switch ( type ) { // `${type.charAt( 0 ).toUpperCase()}${type.slice( 1 ).toLoverCase()}`
       case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
@@ -289,6 +290,9 @@ export default class Chessboard {
 
     if ( isTextured )
       setTexture`../img/${instance}.png`
+
+    if ( `id` in entity )
+      instance.id = entity.id
 
     this.fields[ y ][ x ] = instance
 
@@ -343,7 +347,13 @@ export default class Chessboard {
     chessman.y = to.y
     chessman.lastJump = Date.now()
 
-    return true
+    return nextField.id || true
+  }
+
+  isABeatableField( x, y, entity ) {
+    const field = this.get( x, y )
+
+    return field !== undefined && `${(field || {}).color}` != `${entity.color}`
   }
 }
 

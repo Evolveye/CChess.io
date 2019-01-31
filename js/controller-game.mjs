@@ -24,7 +24,7 @@ export default class GameController {
       y = random( 0, cb.height )
     } while ( cb.get( x, y ) )
 
-    return cb.set( type, x, y, color, 100 )
+    return cb.set( { type, x, y, color, movingTimestamp:100 } )
   }
 
   spawnPlayer( playerController, playerInitializer ) {
@@ -41,11 +41,15 @@ export default class GameController {
       player
     } )
   }
+
   destroyPlayer( id ) {
     const player = this.players.get( id )
+
+    if ( !player )
+      return
+
     const cb = this.chessboard
     const { height, width } = cb
-
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
@@ -63,6 +67,7 @@ export default class GameController {
 
     this.players.delete( id )
   }
+
   playerUpdate( id, { from, to } ) {
     const player = this.players.get( id )
     const tile = this.chessboard.get( from.x, from.y )
