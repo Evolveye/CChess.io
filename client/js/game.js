@@ -97,6 +97,14 @@ export default class Game {
       } )
       document.addEventListener( `mousemove`, e => {
         const c = this.camera
+        const x = Math.floor( (e.clientX - c.x) / tileSize )
+        const y = Math.floor( (e.clientY - c.y) / tileSize )
+        const entity = chessboard.get( x, y ) || {}
+
+        if ( `${entity.color}` == `${player.color}` )
+          this.box.style.cursor = `pointer`
+        else
+          this.box.style.cursor = `default`
 
         if ( c.mouse.action == `move-camera` ) {
           let newX = e.clientX - c.mouse.initialX + c.x
@@ -108,10 +116,6 @@ export default class Game {
             c.y = newY
         }
         else if ( c.mouse.action == `move-chessman` ) {
-          let x = Math.floor( (e.clientX - c.x) / tileSize )
-          let y = Math.floor( (e.clientY - c.y) / tileSize )
-          let entity = chessboard.get( x, y )
-
           if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || `${entity.color}` != `${player.color}` ) )
             this.changePosition.to = { x, y }
           else
