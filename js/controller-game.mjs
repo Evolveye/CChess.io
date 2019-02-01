@@ -3,7 +3,7 @@ import Chessboard, { random, Color } from "./classes.mjs"
 export default class GameController {
   constructor( wssController ) {
     this.players = new Map
-    this.chessboard = new Chessboard( 10, 10, 50 )
+    this.chessboard = new Chessboard( 20, 20, 60 )
     this.jumps = []
 
     for ( let i = 0;  i < 1;  i++ )
