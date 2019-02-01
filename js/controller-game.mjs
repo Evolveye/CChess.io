@@ -69,12 +69,6 @@ export default class GameController {
   }
 
   playerUpdate( id, { from, to } ) {
-    const player = this.players.get( id )
-    const tile = this.chessboard.get( from.x, from.y )
-
-    if ( !tile || `${tile.color}` != `${player.color}` )
-      return
-
     if ( this.chessboard.move( from, to ) )
       this.jumps.push( { from, to } )
   }

@@ -1,5 +1,5 @@
 import ws from "./ws.js"
-import Chessboard, { setTexture } from "/$/classes"
+import Chessboard, { Color, setTexture } from "/$/classes"
 // import Chessboard from "../../js/classes.mjs"
 
 
@@ -16,19 +16,13 @@ export default class Game {
 
     this.map = null
     this.chessmanSize = null
+    this.lastClickedField = { x:null, y:null }
     this.camera = {
       spaceAroundgame: 100,
+      cursor: { x:null, y:null },
+      action: null,
       x: null,
       y: null,
-      mouse: {
-        action: null,
-        initialX: null,
-        initialY: null
-      }
-    }
-    this.changePosition = {
-      from: { x:null, y:null },
-      to: { x:null, y:null }
     }
 
     this.resize()
@@ -66,64 +60,71 @@ export default class Game {
 
       window.addEventListener( `resize`, () => this.resize() )
       document.addEventListener( `mouseup`, () => {
-        const { from, to } = this.changePosition
+        const field = this.lastClickedField
+        const x = Math.floor( (c.cursor.x - c.x) / tileSize )
+        const y = Math.floor( (c.cursor.y - c.y) / tileSize )
 
-        if ( chessboard.checkJump( from, to ) )
-          ws.send( `game-update-player`, { from, to } )
+        const from = { x:field.x, y:field.y }
+        const to = { x, y }
 
-        this.camera.mouse.action = null
-        this.changePosition.from = { x:null, y:null }
-        this.changePosition.to = { x:null, y:null }
-      } )
-      document.addEventListener( `mousedown`, e => {
-        const c = this.camera
+        if ( !field || !chessboard.isAbove( x, y ) )
+          return
 
-        c.mouse.initialX = e.clientX
-        c.mouse.initialY = e.clientY
-
-        let x = Math.floor( (e.clientX - c.x) / tileSize )
-        let y = Math.floor( (e.clientY - c.y) / tileSize )
-
-        let field = chessboard.get( x, y )
-
-        if ( field ) {
-          if ( `${field.color}` == `${player.color}` ) {
-            c.mouse.action = `move-chessman`
-            this.changePosition.from = { x, y }
+        if ( c.action == `jump` ) {
+          if ( field.x == x && field.y == y )
+            c.action = `jump-2_clicks`
+          else if ( chessboard.checkJump( from, to ) ) {
+            ws.send( `game-update-player`, { from, to } )
+            c.action = null
           }
         }
+        else if ( c.action == `jump-2_clicks` ) {
+          if ( (field.x != x || field.y != y) && chessboard.checkJump( from, to ) )
+            ws.send( `game-update-player`, { from, to } )
+
+          c.action = null
+        }
         else
-          c.mouse.action = `move-camera`
+          c.action = null
+      } )
+      document.addEventListener( `mousedown`, () => {
+        const x = Math.floor( (c.cursor.x - c.x) / tileSize )
+        const y = Math.floor( (c.cursor.y - c.y) / tileSize )
+        const field = chessboard.get( x, y )
+
+        if ( field && Color.isEqual( field, player ) ) {
+          this.lastClickedField = chessboard.get( x, y )
+          c.action = `jump`
+        }
+        else if ( c.action != `jump-2_clicks` )
+          c.action = `moving`
       } )
       document.addEventListener( `mousemove`, e => {
-        const c = this.camera
-        const x = Math.floor( (e.clientX - c.x) / tileSize )
-        const y = Math.floor( (e.clientY - c.y) / tileSize )
+        c.cursor.x = e.clientX
+        c.cursor.y = e.clientY
+
+        const x = Math.floor( (c.cursor.x - c.x) / tileSize )
+        const y = Math.floor( (c.cursor.y - c.y) / tileSize )
         const entity = chessboard.get( x, y ) || {}
 
-        if ( `${entity.color}` == `${player.color}` )
+        if ( Color.isEqual( entity, player ) )
           this.box.style.cursor = `pointer`
         else
           this.box.style.cursor = `default`
 
-        if ( c.mouse.action == `move-camera` ) {
-          let newX = e.clientX - c.mouse.initialX + c.x
-          let newY = e.clientY - c.mouse.initialY + c.y
+        if ( c.action != `moving` )
+          return
 
-          if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
-            c.x = newX
-          if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
-            c.y = newY
-        }
-        else if ( c.mouse.action == `move-chessman` ) {
-          if ( x >= 0 && y >= 0 && x < width && y < height && (!entity || `${entity.color}` != `${player.color}` ) )
-            this.changePosition.to = { x, y }
-          else
-            this.changePosition.to = { x:null, y:null }
-        }
+        const { width, height } = this.chessboard
 
-        c.mouse.initialX = e.clientX
-        c.mouse.initialY = e.clientY
+        let newX = e.clientX - c.cursor.x + c.x
+        let newY = e.clientY - c.cursor.y + c.y
+
+        if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
+          c.x = newX
+
+        if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
+          c.y = newY
       } )
       ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
@@ -136,7 +137,7 @@ export default class Game {
   logic() {
     const cb = this.chessboard
     const c = this.camera
-    const p = this.player
+    // const p = this.player
 
     let cameraJump = cb.tileSize / 2
 
@@ -155,7 +156,6 @@ export default class Game {
     const c = this.camera
     const ctx = this.ctx
     const tSize = cb.tileSize
-    const { from } = this.changePosition
 
     ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
 
@@ -169,10 +169,10 @@ export default class Game {
         if ( (y + x) % 2 )
           ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
 
-    if ( this.changePosition.from.x != null ) {
-      const entity = cb.get( from.x, from.y )
+    if ( /^jump/.test( c.action ) ) {
+      const entity = this.lastClickedField
 
-      // if ( `${entity.color}` == `${this.player.color}`)
+      // if ( Color.isEqual( entity, player ) )
 
       ctx.fillStyle = `${entity.color}22`
 

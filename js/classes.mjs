@@ -79,6 +79,10 @@ export class Color {
     if ( hint == 'string' )
       return this.txtFormat
   }
+
+  static isEqual( entityA, entityB ) {
+    return `${entityA.color}` == `${entityB.color}`
+  }
 }
 class Chessman {
   constructor( x, y, color, movingTimestamp=1000, type ) {
@@ -207,7 +211,6 @@ class King extends Chessman {
     return availableFields
   }
 
-
   checkJump( { x, y } ) {}
 }
 class Queen extends Chessman {
@@ -329,15 +332,19 @@ export default class Chessboard {
     if ( !this.checkJump( from, to ) )
       return false
 
-    if ( nextField && !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
-      fields[ from.y ][ from.x ] = nextField
-      nextField.x = from.x
-      nextField.y = from.y
-      nextField.lastJump = Date.now()
-      nextField.color = chessman.color
+    if ( nextField ) {
+      if ( `${nextField.color}` == `${chessman.color}` )
+        return false
+      else if ( !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
+        fields[ from.y ][ from.x ] = nextField
+        nextField.x = from.x
+        nextField.y = from.y
+        nextField.lastJump = Date.now()
+        nextField.color = chessman.color
 
-      if ( `setTextureColor` in nextField )
-        nextField.setTextureColor( chessman.color )
+        if ( `setTextureColor` in nextField )
+          nextField.setTextureColor( chessman.color )
+      }
     }
     else
       fields[ from.y ][ from.x ] = null
@@ -355,6 +362,10 @@ export default class Chessboard {
     const field = this.get( x, y )
 
     return field !== undefined && `${(field || {}).color}` != `${entity.color}`
+  }
+
+  isAbove( x, y ) {
+    return 0 <= x && x < this.width && 0 <= y && y < this.height
   }
 }
 
