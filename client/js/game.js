@@ -68,7 +68,7 @@ export default class Game {
         const to = { x, y }
 
         if ( !field || !chessboard.isAbove( x, y ) )
-          return
+          c.action = null
 
         if ( c.action == `jump` ) {
           if ( field.x == x && field.y == y )
@@ -126,6 +126,7 @@ export default class Game {
           c.y = newY
       } )
       ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
+      ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
       ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) =>
         chessboard.move( from, to ) === player.id  ?  this.end()  :  null
@@ -136,7 +137,6 @@ export default class Game {
   logic() {
     const cb = this.chessboard
     const c = this.camera
-    // const p = this.player
 
     let cameraJump = cb.tileSize / 2
 
@@ -224,7 +224,6 @@ export default class Game {
   }
 }
 Game.keys = []
-
 
 document.addEventListener( `keydown`, e => Game.keys[ e.keyCode ] = true )
 document.addEventListener( `keyup`, e => Game.keys[ e.keyCode ] = false )

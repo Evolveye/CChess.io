@@ -48,23 +48,11 @@ export default class GameController {
     if ( !player )
       return
 
-    const cb = this.chessboard
-    const { height, width } = cb
+    for ( const entity of this.chessboard.removePlayer( player.color ) )
+      if ( !(`id` in entity) )
+        player.broadcast( `game-update-spawn`, this.spawn( entity.type ) )
 
-    for ( let y = 0;  y < height;  y++ )
-      for ( let x = 0;  x < width;  x++ ) {
-        const field = cb.get( x, y )
-
-        if ( field && field.color == player.color ) {
-          player.broadcast( `game-update-despawn`, { x, y } )
-
-          if ( !(`id` in field) )
-            player.broadcast( `game-update-spawn`, this.spawn( field.type ) )
-
-          cb.remove( x, y )
-        }
-      }
-
+    player.broadcast( `game-update-despawn-player`, player.color )
     this.players.delete( id )
   }
 

@@ -81,7 +81,13 @@ export class Color {
   }
 
   static isEqual( entityA, entityB ) {
-    return `${(entityA || {}).color}` == `${(entityB || {}).color}`
+    if ( !entityA || !entityB )
+      return false
+
+    const colorA = entityA.txtFormat  ?  entityA.txtFormat  :  entityA.color
+    const colorB = entityB.txtFormat  ?  entityB.txtFormat  :  entityB.color
+
+    return `${colorA}` == `${colorB}`
   }
 }
 class Chessman {
@@ -317,10 +323,25 @@ export default class Chessboard {
     if ( !chessman || !chessman.checkJump( to, this ) || nextField === undefined )
       return false
 
-    if ( nextField && (`${nextField.color}` == `${chessman.color}`) )
+    if ( nextField && Color.isEqual( chessman, nextField ) )
       return false
 
     return true
+  }
+
+  removePlayer( color ) {
+    if ( !color )
+      return
+
+    const deletedEntities = []
+    const { height, width } = this
+
+    for ( let y = 0;  y < height;  y++ )
+      for ( let x = 0;  x < width;  x++ )
+        if ( Color.isEqual( this.get( x, y ), color ) )
+          deletedEntities.push( this.remove( x, y ) )
+
+    return deletedEntities
   }
 
   move( from, to ) {
@@ -329,10 +350,10 @@ export default class Chessboard {
     const chessman = this.get( from.x, from.y )
     const nextField = this.get( to.x, to.y )
 
-    if ( !this.checkJump( from, to ) || Color.isEqual( chessman, nextField ) )
+    if ( !this.checkJump( from, to ) )
       return false
 
-    if ( nextField && !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
+    if ( nextField && !(`id` in nextField) ) {
       fields[ from.y ][ from.x ] = nextField
       nextField.x = from.x
       nextField.y = from.y
