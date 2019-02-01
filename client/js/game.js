@@ -77,6 +77,8 @@ export default class Game {
             ws.send( `game-update-player`, { from, to } )
             c.action = null
           }
+          else
+            c.action = null
         }
         else if ( c.action == `jump-2_clicks` ) {
           if ( (field.x != x || field.y != y) && chessboard.checkJump( from, to ) )
@@ -86,6 +88,8 @@ export default class Game {
         }
         else
           c.action = null
+
+        this.cameraCursorUpdate( x, y )
       } )
       document.addEventListener( `mousedown`, () => {
         const x = Math.floor( (c.cursor.x - c.x) / tileSize )
@@ -189,12 +193,18 @@ export default class Game {
   }
 
   cameraCursorUpdate( x, y ) {
-    if ( Color.isEqual( this.chessboard.get( x, y ), this.player ) )
-      return this.box.style.cursor = `pointer`
-    else if ( /^jump/.test( this.camera.action ) )
+    const jumping = /^jump/.test( this.camera.action )
+
+    if ( Color.isEqual( this.chessboard.get( x, y ), this.player ) ) {
+      if ( jumping )
+        return this.box.style.cursor = `grabbing`
+      else
+        return this.box.style.cursor = `pointer`
+    }
+    else if ( jumping )
       for ( const coords of this.lastClickedField.availableFields( this.chessboard ) )
         if ( coords.x == x && coords.y == y )
-          return this.box.style.cursor = `pointer`
+          return this.box.style.cursor = `grabbing`
 
     this.box.style.cursor = `default`
   }
