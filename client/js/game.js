@@ -102,8 +102,13 @@ export default class Game {
         }
         else if ( c.action != `jump-2_clicks` )
           c.action = `moving`
+
+        this.cameraCursorUpdate( x, y )
       } )
       document.addEventListener( `mousemove`, e => {
+        const newX = e.clientX - c.cursor.x + c.x
+        const newY = e.clientY - c.cursor.y + c.y
+
         c.cursor.x = e.clientX
         c.cursor.y = e.clientY
 
@@ -116,9 +121,6 @@ export default class Game {
           return
 
         const { width, height } = this.chessboard
-
-        let newX = e.clientX - c.cursor.x + c.x
-        let newY = e.clientY - c.cursor.y + c.y
 
         if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
           c.x = newX
