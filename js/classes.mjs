@@ -81,7 +81,7 @@ export class Color {
   }
 
   static isEqual( entityA, entityB ) {
-    return `${entityA.color}` == `${entityB.color}`
+    return `${(entityA || {}).color}` == `${(entityB || {}).color}`
   }
 }
 class Chessman {
@@ -329,22 +329,18 @@ export default class Chessboard {
     const chessman = this.get( from.x, from.y )
     const nextField = this.get( to.x, to.y )
 
-    if ( !this.checkJump( from, to ) )
+    if ( !this.checkJump( from, to ) || Color.isEqual( chessman, nextField ) )
       return false
 
-    if ( nextField ) {
-      if ( `${nextField.color}` == `${chessman.color}` )
-        return false
-      else if ( !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
-        fields[ from.y ][ from.x ] = nextField
-        nextField.x = from.x
-        nextField.y = from.y
-        nextField.lastJump = Date.now()
-        nextField.color = chessman.color
+    if ( nextField && !(`id` in nextField) && `${nextField.color}` != `${chessman.color}` ) {
+      fields[ from.y ][ from.x ] = nextField
+      nextField.x = from.x
+      nextField.y = from.y
+      nextField.lastJump = Date.now()
+      nextField.color = chessman.color
 
-        if ( `setTextureColor` in nextField )
-          nextField.setTextureColor( chessman.color )
-      }
+      if ( `setTextureColor` in nextField )
+        nextField.setTextureColor( chessman.color )
     }
     else
       fields[ from.y ][ from.x ] = null

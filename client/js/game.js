@@ -92,8 +92,8 @@ export default class Game {
         const y = Math.floor( (c.cursor.y - c.y) / tileSize )
         const field = chessboard.get( x, y )
 
-        if ( field && Color.isEqual( field, player ) ) {
-          this.lastClickedField = chessboard.get( x, y )
+        if ( Color.isEqual( field, player ) ) {
+          this.lastClickedField = field
           c.action = `jump`
         }
         else if ( c.action != `jump-2_clicks` )
@@ -105,9 +105,8 @@ export default class Game {
 
         const x = Math.floor( (c.cursor.x - c.x) / tileSize )
         const y = Math.floor( (c.cursor.y - c.y) / tileSize )
-        const entity = chessboard.get( x, y ) || {}
 
-        if ( Color.isEqual( entity, player ) )
+        if ( Color.isEqual( chessboard.get( x, y ), player ) )
           this.box.style.cursor = `pointer`
         else
           this.box.style.cursor = `default`
@@ -171,8 +170,6 @@ export default class Game {
 
     if ( /^jump/.test( c.action ) ) {
       const entity = this.lastClickedField
-
-      // if ( Color.isEqual( entity, player ) )
 
       ctx.fillStyle = `${entity.color}22`
 
