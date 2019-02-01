@@ -106,10 +106,7 @@ export default class Game {
         const x = Math.floor( (c.cursor.x - c.x) / tileSize )
         const y = Math.floor( (c.cursor.y - c.y) / tileSize )
 
-        if ( Color.isEqual( chessboard.get( x, y ), player ) )
-          this.box.style.cursor = `pointer`
-        else
-          this.box.style.cursor = `default`
+        this.cameraCursorUpdate( x, y )
 
         if ( c.action != `moving` )
           return
@@ -171,7 +168,7 @@ export default class Game {
     if ( /^jump/.test( c.action ) ) {
       const entity = this.lastClickedField
 
-      ctx.fillStyle = `${entity.color}22`
+      ctx.fillStyle = `${entity.color}33`
 
       for ( const { x, y } of entity.availableFields( cb ) )
         ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
@@ -189,6 +186,17 @@ export default class Game {
 
         ctx.drawImage( entity.tex, eX, eY, this.chessmanSize, this.chessmanSize )
       }
+  }
+
+  cameraCursorUpdate( x, y ) {
+    if ( Color.isEqual( this.chessboard.get( x, y ), this.player ) )
+      return this.box.style.cursor = `pointer`
+    else if ( /^jump/.test( this.camera.action ) )
+      for ( const coords of this.lastClickedField.availableFields( this.chessboard ) )
+        if ( coords.x == x && coords.y == y )
+          return this.box.style.cursor = `pointer`
+
+    this.box.style.cursor = `default`
   }
 
   resize() {
