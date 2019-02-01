@@ -3,35 +3,51 @@ body {
   margin: 0;
   font-family: monospace;
 }
-body > * {
+input {
+  background: transparent;
+  border: none;
+}
+.game > * {
   position: absolute;
   color: #FFFFFFBB;
-  background-color: #333;
   user-select: none;
 }
 
-.chat {
+.game .chat {
   left: 10px;
   top: 10px;
 }
-  .chat-message {
+  .game .chat.active {
+    background: #00000044;
+  }
+  .game .chat-message {
     margin: 0;
     padding: 5px;
     background-color: #00000044;
   }
+  .game .chat-input {
+    position: relative;
+    color: inherit;
+    padding: 5px;
+  }
+    .game .chat-input:focus {
+      outline: none;
+    }
 
-.canvas-main {
+.game .canvas-main {
   width: 100vw;
   height: 100vh;
   background-color: #666
 }
 
-.server_connection {
+.game .server_connection {
+  background-color: #333;
   right: 10px;
   top: 10px;
 }
 
-.version {
+.game .version {
+  background-color: #333;
   right: 10px;
   bottom: 10px
 }

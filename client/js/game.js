@@ -1,5 +1,6 @@
 import ws from "./ws.js"
 import Chessboard, { Color, setTexture } from "/$/classes"
+import Chat from "./chat.js"
 // import Chessboard from "../../js/classes.mjs"
 
 
@@ -8,12 +9,21 @@ export default class Game {
     this.box = document.querySelector( `.game` )
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
+
+      <section class="server_connection"></section>
+
+      <section class="version">Approximate v: inDev_2.6</section>
+
+      <section class="chat"></section>
     `
 
     /** @type {HTMLCanvasElement} */
     this.canvas = this.box.querySelector( `.canvas-main` )
     this.ctx = this.canvas.getContext( `2d` )
 
+    this.chat = new Chat( this.box.querySelector( `.chat` ) )
+
+    this.mode = `game`
     this.map = null
     this.chessmanSize = null
     this.lastClickedField = { x:null, y:null }
@@ -59,6 +69,23 @@ export default class Game {
       requestAnimationFrame( () => this.draw() )
 
       window.addEventListener( `resize`, () => this.resize() )
+      document.addEventListener( `keypress`, () => {
+        if ( !Game.key( `enter`) )
+          return
+
+        const c = this.chat
+
+        if ( this.mode == `chat` ) {
+          this.mode = `game`
+          c.box.classList.remove( `active` )
+          c.input.blur()
+        }
+        else if ( this.mode == `game` ) {
+          this.mode = `chat`
+          c.box.classList.add( `active` )
+          c.input.focus()
+        }
+      } )
       document.addEventListener( `mouseup`, () => {
         const field = this.lastClickedField
         const x = Math.floor( (c.cursor.x - c.x) / tileSize )
@@ -138,19 +165,23 @@ export default class Game {
   }
 
   logic() {
-    const cb = this.chessboard
-    const c = this.camera
+    if ( this.mode == `game` ) {
+      const cb = this.chessboard
+      const c = this.camera
 
-    let cameraJump = cb.tileSize / 2
+      let cameraJump = cb.tileSize / 2
 
-    if ( Game.key( `w` ) && c.y < c.spaceAroundgame )
-      c.y += cameraJump
-    if ( Game.key( `s` ) && c.y > window.innerHeight - c.spaceAroundgame - cb.height * cb.tileSize )
-      c.y -= cameraJump
-    if ( Game.key( `a` ) && c.x < c.spaceAroundgame )
-      c.x += cameraJump
-    if ( Game.key( `d` ) && c.x > window.innerWidth - c.spaceAroundgame - cb.width * cb.tileSize )
-      c.x -= cameraJump
+      if ( Game.key( `w` ) && c.y < c.spaceAroundgame )
+        c.y += cameraJump
+      if ( Game.key( `s` ) && c.y > window.innerHeight - c.spaceAroundgame - cb.height * cb.tileSize )
+        c.y -= cameraJump
+      if ( Game.key( `a` ) && c.x < c.spaceAroundgame )
+        c.x += cameraJump
+      if ( Game.key( `d` ) && c.x > window.innerWidth - c.spaceAroundgame - cb.width * cb.tileSize )
+        c.x -= cameraJump
+    }
+    else if ( this.mode == `chat` ) {
+    }
   }
 
   draw() {
@@ -222,11 +253,11 @@ export default class Game {
     alert( `game over` )
   }
 
-  static key( key ) {
+  static key( key, newBool=null ) {
     const k = Game.keys
 
     if ( typeof key === `string`)
-      switch ( key ) {
+      switch ( key.toLowerCase() ) {
         case `left`: return k[ 37 ]
         case `right`: return k[ 39 ]
         case `up`: return k[ 38 ]
@@ -237,10 +268,17 @@ export default class Game {
         case `s`: return k[ 83 ]
         case `a`: return k[ 65 ]
         case `d`: return k[ 68 ]
-        case `wsad`: case `WSAD`: return k[ 87 ]  ||  k[ 83 ]  ||  k[ 65 ]  ||  k[ 68 ]
+        case `wsad`: return k[ 87 ]  ||  k[ 83 ]  ||  k[ 65 ]  ||  k[ 68 ]
+
+        case `enter`: return k[ 13 ]
       }
 
-    return k[ key ]
+    key = k[ key ]
+
+    if ( newBool != null )
+      k[ key ] = newBool
+
+    return key
   }
 }
 Game.keys = []
