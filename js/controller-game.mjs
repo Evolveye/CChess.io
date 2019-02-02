@@ -6,7 +6,7 @@ export default class GameController {
     this.chessboard = new Chessboard( 30, 30, 60 )
     this.jumps = []
 
-    for ( let i = 15;  i;  i-- )
+    for ( let i = 55;  i;  i-- )
       this.spawn( `pawn` )
 
     for ( let i = 5;  i;  i-- ) {
