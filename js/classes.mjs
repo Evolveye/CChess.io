@@ -250,10 +250,10 @@ class Knight extends Chessman {
     for ( let reverserY = -1;  reverserY < 2;  reverserY += 2 )
       for ( let reverserX = -1;  reverserX < 2;  reverserX += 2 ) {
         if ( cb.isABeatableField( this.x + 1 * reverserX, this.y + 2 * reverserY, this ) )
-          availableFields.push( { x:(this.x + x), y:(this.y + y) } )
+          availableFields.push( { x:(this.x + 1 * reverserX), y:(this.y + 2 * reverserY) } )
 
         if ( cb.isABeatableField( this.x + 2 * reverserX, this.y + 1 * reverserY, this ) )
-          availableFields.push( { x:(this.x + x), y:(this.y + y) } )
+          availableFields.push( { x:(this.x + 2 * reverserX), y:(this.y + 1 * reverserY) } )
       }
 
     return availableFields
