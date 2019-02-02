@@ -50,17 +50,28 @@ export default class Game {
       player = this.player
       chessboard = this.chessboard
 
-      c.x = window.innerWidth / 2 - (player.x + .5) * tileSize
-      c.y = window.innerHeight / 2 - (player.y + .5) * tileSize
 
-      if ( c.y > c.spaceAroundgame )
-        c.y = c.spaceAroundgame
-      else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
-        c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
-      if ( c.x > c.spaceAroundgame )
-        c.x = c.spaceAroundgame
-      else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
-        c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
+      if ( window.innerWidth < width * tileSize ) {
+        c.x = window.innerWidth / 2 - (player.x + .5) * tileSize
+
+        if ( c.x > c.spaceAroundgame )
+          c.x = c.spaceAroundgame
+        else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
+          c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
+      }
+      else
+        c.x = window.innerWidth / 2 - width * tileSize / 2
+
+      if ( window.innerHeight < height * tileSize ) {
+        c.y = window.innerHeight / 2 - (player.y + .5) * tileSize
+
+        if ( c.y > c.spaceAroundgame )
+          c.y = c.spaceAroundgame
+        else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
+          c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
+      }
+      else
+        c.y =  window.innerHeight / 2 - height * tileSize / 2
 
       setInterval( () => {
         this.logic()
