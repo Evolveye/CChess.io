@@ -84,17 +84,23 @@ export class Color {
     if ( !entityA || !entityB )
       return false
 
-    const colorA = entityA.txtFormat  ?  entityA.txtFormat  :  entityA.color
-    const colorB = entityB.txtFormat  ?  entityB.txtFormat  :  entityB.color
+    const getColorData = entity => {
+      if ( typeof entity == `string` )
+        return `${entity}`
+      if ( `txtFormat` in entity )
+        return entityA.txtFormat
+      if ( `color` in entity )
+        return entity.color
+    }
 
-    return `${colorA}` == `${colorB}`
+    return `${getColorData( entityA )}` == `${getColorData( entityB )}`
   }
 }
 class Chessman {
   constructor( x, y, color, movingTimestamp=1000, type ) {
     this.x = x
     this.y = y
-    this.color = new Color( color || `#FFFFFF` )
+    this.color = new Color( color || `#ffffff` )
     this.movingTimestamp = movingTimestamp
     this.lastJump = 0
     this.type = type
@@ -214,7 +220,7 @@ class Pawn extends Chessman {
       if ( this.x != x ^ this.y != y )
         return !entity
 
-      return !!entiry
+      return !!entity
     }
 
     return false
@@ -459,7 +465,7 @@ export default class Chessboard {
     if ( !this.checkJump( from, to ) )
       return false
 
-    if ( nextField && !(`id` in nextField) ) {
+    if ( nextField && !(`id` in nextField) && Color.isEqual( nextField, `#ffffff` ) ) {
       fields[ from.y ][ from.x ] = nextField
       nextField.x = from.x
       nextField.y = from.y

@@ -12,9 +12,11 @@ export default class Game {
 
       <section class="server_connection"></section>
 
-      <section class="version">Approximate v: inDev_2.6</section>
+      <section class="version">Approximate v: inDev_2.7.0</section>
 
       <section class="chat"></section>
+
+      <section class="console"></section>
     `
 
     /** @type {HTMLCanvasElement} */
@@ -22,6 +24,7 @@ export default class Game {
     this.ctx = this.canvas.getContext( `2d` )
 
     this.chat = new Chat( this.box.querySelector( `.chat` ) )
+    this.console = this.box.querySelector( `.console` )
 
     this.mode = `game`
     this.map = null
@@ -79,8 +82,11 @@ export default class Game {
       }, 1000 / 60 )
       requestAnimationFrame( () => this.draw() )
 
-      window.addEventListener( `resize`, () => this.resize() )
-      document.addEventListener( `keypress`, () => {
+      window.addEventListener(   `resize`,    () => this.resize() )
+      document.addEventListener( `mouseup`,   () => this.cursorUp() )
+      document.addEventListener( `mousedown`, () => this.cursorDown() )
+      document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
+      document.addEventListener( `keypress`,  () => {
         if ( !Game.key( `enter`) )
           return
 
@@ -97,75 +103,6 @@ export default class Game {
           c.input.focus()
         }
       } )
-      document.addEventListener( `mouseup`, () => {
-        const field = this.lastClickedField
-        const x = Math.floor( (c.cursor.x - c.x) / tileSize )
-        const y = Math.floor( (c.cursor.y - c.y) / tileSize )
-
-        const from = { x:field.x, y:field.y }
-        const to = { x, y }
-
-        if ( !field || !chessboard.isAbove( x, y ) )
-          c.action = null
-
-        if ( c.action == `jump` ) {
-          if ( field.x == x && field.y == y )
-            c.action = `jump-2_clicks`
-          else if ( chessboard.checkJump( from, to ) ) {
-            ws.send( `game-update-player`, { from, to } )
-            c.action = null
-          }
-          else
-            c.action = null
-        }
-        else if ( c.action == `jump-2_clicks` ) {
-          if ( (field.x != x || field.y != y) && chessboard.checkJump( from, to ) )
-            ws.send( `game-update-player`, { from, to } )
-
-          c.action = null
-        }
-        else
-          c.action = null
-
-        this.cameraCursorUpdate( x, y )
-      } )
-      document.addEventListener( `mousedown`, () => {
-        const x = Math.floor( (c.cursor.x - c.x) / tileSize )
-        const y = Math.floor( (c.cursor.y - c.y) / tileSize )
-        const field = chessboard.get( x, y )
-
-        if ( Color.isEqual( field, player ) ) {
-          this.lastClickedField = field
-          c.action = `jump`
-        }
-        else if ( c.action != `jump-2_clicks` )
-          c.action = `moving`
-
-        this.cameraCursorUpdate( x, y )
-      } )
-      document.addEventListener( `mousemove`, e => {
-        const newX = e.clientX - c.cursor.x + c.x
-        const newY = e.clientY - c.cursor.y + c.y
-
-        c.cursor.x = e.clientX
-        c.cursor.y = e.clientY
-
-        const x = Math.floor( (c.cursor.x - c.x) / tileSize )
-        const y = Math.floor( (c.cursor.y - c.y) / tileSize )
-
-        this.cameraCursorUpdate( x, y )
-
-        if ( c.action != `moving` )
-          return
-
-        const { width, height } = this.chessboard
-
-        if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
-          c.x = newX
-
-        if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
-          c.y = newY
-      } )
       ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
@@ -173,6 +110,87 @@ export default class Game {
         chessboard.move( from, to ) === player.id  ?  this.end()  :  null
       ) )
     } )
+  }
+  cursorUp() {
+    this.console.textContent = `mouseup`
+
+    const c = this.camera
+    const cb = this.chessboard
+    const field = this.lastClickedField
+    const x = Math.floor( (c.cursor.x - c.x) / cb.tileSize )
+    const y = Math.floor( (c.cursor.y - c.y) / cb.tileSize )
+
+    const from = { x:field.x, y:field.y }
+    const to = { x, y }
+
+    if ( !field || !cb.isAbove( x, y ) )
+      c.action = null
+
+    if ( c.action == `jump` ) {
+      if ( field.x == x && field.y == y )
+        c.action = `jump-2_clicks`
+      else if ( cb.checkJump( from, to ) ) {
+        ws.send( `game-update-player`, { from, to } )
+        c.action = null
+      }
+      else
+        c.action = null
+    }
+    else if ( c.action == `jump-2_clicks` ) {
+      if ( (field.x != x || field.y != y) && cb.checkJump( from, to ) )
+        ws.send( `game-update-player`, { from, to } )
+
+      c.action = null
+    }
+    else
+      c.action = null
+
+    this.cameraCursorUpdate( x, y )
+  }
+
+  cursorDown() {
+    this.console.textContent = `mousedown`
+
+    const c = this.camera
+    const x = Math.floor( (c.cursor.x - c.x) / this.chessboard.tileSize )
+    const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
+    const field = this.chessboard.get( x, y )
+
+    if ( Color.isEqual( field, this.player ) ) {
+      this.lastClickedField = field
+      c.action = `jump`
+    }
+    else if ( c.action != `jump-2_clicks` )
+      c.action = `moving`
+
+    this.cameraCursorUpdate( x, y )
+  }
+
+  cursorMove( e ) {
+    this.console.textContent = `mousemove`
+
+    const c = this.camera
+    const { width, height, tileSize } = this.chessboard
+    const newX = e.clientX - c.cursor.x + c.x
+    const newY = e.clientY - c.cursor.y + c.y
+
+    c.cursor.x = e.clientX
+    c.cursor.y = e.clientY
+
+    const x = Math.floor( (c.cursor.x - c.x) / tileSize )
+    const y = Math.floor( (c.cursor.y - c.y) / tileSize )
+
+    this.cameraCursorUpdate( x, y )
+
+    if ( c.action != `moving` )
+      return
+
+
+    if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
+      c.x = newX
+
+    if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
+      c.y = newY
   }
 
   logic() {
