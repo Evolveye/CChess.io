@@ -2,26 +2,45 @@ import Chessboard, { random, Color } from "./classes.mjs"
 
 export default class GameController {
   constructor( wssController ) {
+    this.wssController = wssController
     this.players = new Map
     this.chessboard = new Chessboard( 30, 30, 60 )
     this.jumps = []
 
-    for ( let i = 55;  i;  i-- )
-      this.spawn( `pawn` )
-
-    for ( let i = 5;  i;  i-- ) {
-      this.spawn( `rook` )
-      this.spawn( `knight` )
-      this.spawn( `bishop` )
-    }
-
-    this.spawn( `queen` )
-    this.spawn( `queen` )
-
+    this.chessboardFiller()
+    setInterval( () => this.chessboardFiller(), 1000 * 60 )
     setInterval( () => {
+      if ( !this.jumps.length )
+        return
+
       wssController.broadcast( `game-update-jumps`, this.jumps )
       this.jumps = []
     }, 1000 / 60 )
+  }
+
+  chessboardFiller() {
+    const cb = this.chessboard
+    const { width, height } = cb
+    const chessPieces = {
+      pawn: 15,
+      rook: 5,
+      knight: 5,
+      bishop: 5,
+      queen: 2
+    }
+
+    for ( let y = 0;  y < height;  y++ )
+      for ( let x = 0;  x < width;  x++ ) {
+        const entity = cb.get( x, y )
+
+        if ( entity && !(`id` in entity) )
+          --chessPieces[ entity.type ]
+      }
+
+
+    for ( const chessPiece in chessPieces )
+      for ( let i = chessPieces[ chessPiece ];  i > 0;  i-- )
+        this.wssController.broadcast( `game-update-spawn`, this.spawn( chessPiece ) )
   }
 
   spawn( type, color=null ) {
