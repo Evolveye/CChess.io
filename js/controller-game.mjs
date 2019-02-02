@@ -3,14 +3,19 @@ import Chessboard, { random, Color } from "./classes.mjs"
 export default class GameController {
   constructor( wssController ) {
     this.players = new Map
-    this.chessboard = new Chessboard( 20, 20, 60 )
+    this.chessboard = new Chessboard( 30, 30, 60 )
     this.jumps = []
 
-    //for ( let i = 0;  i < 1;  i++ )
-    this.spawn( `pawn` )
-    this.spawn( `rook` )
-    this.spawn( `knight` )
-    this.spawn( `bishop` )
+    for ( let i = 15;  i;  i-- )
+      this.spawn( `pawn` )
+
+    for ( let i = 5;  i;  i-- ) {
+      this.spawn( `rook` )
+      this.spawn( `knight` )
+      this.spawn( `bishop` )
+    }
+
+    this.spawn( `queen` )
     this.spawn( `queen` )
 
     setInterval( () => {
