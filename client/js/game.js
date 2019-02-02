@@ -205,7 +205,7 @@ export default class Game {
     if ( /^jump/.test( c.action ) ) {
       const entity = this.lastClickedField
 
-      ctx.fillStyle = `${entity.color}33`
+      ctx.fillStyle = `${entity.color}44`
 
       for ( const { x, y } of entity.availableFields( cb ) )
         ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
