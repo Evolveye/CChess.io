@@ -6,8 +6,12 @@ export default class GameController {
     this.chessboard = new Chessboard( 20, 20, 60 )
     this.jumps = []
 
-    for ( let i = 0;  i < 1;  i++ )
-      this.spawn( `pawn` )
+    //for ( let i = 0;  i < 1;  i++ )
+    this.spawn( `pawn` )
+    this.spawn( `rook` )
+    this.spawn( `knight` )
+    this.spawn( `bishop` )
+    this.spawn( `queen` )
 
     setInterval( () => {
       wssController.broadcast( `game-update-jumps`, this.jumps )

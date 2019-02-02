@@ -107,7 +107,7 @@ class Chessman {
     return this.movingTimestamp <= Date.now() - this.lastJump
   }
 
-  /** Check if chessman can jump to `{ x  y }` coorinates
+  /** Check if chessman can jump to `{ x  y }` coorinates (without test field/entity existing)
    * @returns {Boolean}
   */
   checkJump( { x, y }, chessboard ) { // Override it for performance
@@ -125,6 +125,60 @@ class Chessman {
   availableFields( chessboard ) {
     throw `You have to override me!`
   }
+
+  static movingLoopLogic( data, chessboard, chessman, x, y ) {
+    if ( chessboard.isABeatableField( chessman.x + x, chessman.y + y, chessman ) )
+      data.fields.push( { x:(chessman.x + x), y:(chessman.y + y) } )
+
+    if ( chessboard.get( chessman.x + x, chessman.y + y ) )
+      data.wall = true
+
+  }
+
+  static moveAlongTheAxis( chessboard, chessman ) {
+    const data = { wall:false, fields:[] }
+    const { width, height } = chessboard
+    const { x, y } = chessman
+
+    for ( let left = -1;  left + x >= 0 && !data.wall;  left-- )
+      this.movingLoopLogic( data, chessboard, chessman, left, 0 )
+
+    data.wall = false
+    for ( let right = 1;  right + x < width && !data.wall;  right++ )
+      this.movingLoopLogic( data, chessboard, chessman, right, 0 )
+
+    data.wall = false
+    for ( let top = -1;  top + y >= 0 && !data.wall;  top-- )
+      this.movingLoopLogic( data, chessboard, chessman, 0, top )
+
+    data.wall = false
+    for ( let bottom = 1;  bottom + y < height && !data.wall;  bottom++ )
+      this.movingLoopLogic( data, chessboard, chessman, 0, bottom )
+
+    return data.fields
+  }
+
+  static moveDiagonally( chessboard, chessman ) {
+    const data = { wall:false, fields:[] }
+    const { width, height } = chessboard
+
+    for ( let rb = 1;  chessman.x + rb < width && chessman.y + rb < height && !data.wall;  rb++ )
+      this.movingLoopLogic( data, chessboard, chessman, rb, rb )
+
+    data.wall = false
+    for ( let rt = 1;  chessman.x + rt < width && chessman.y - rt >= 0 && !data.wall;  rt++ )
+      this.movingLoopLogic( data, chessboard, chessman, rt, -rt )
+
+    data.wall = false
+    for ( let lt = 1;  chessman.x - lt >= 0 && chessman.y - lt >= 0 && !data.wall;  lt++ )
+      this.movingLoopLogic( data, chessboard, chessman, -lt, -lt )
+
+    data.wall = false
+    for ( let lb = 1;  chessman.x - lb >= 0 && chessman.y + lb < height && !data.wall;  lb++ )
+      this.movingLoopLogic( data, chessboard, chessman, -lb, lb )
+
+    return data.fields
+  }
 }
 
 class Pawn extends Chessman {
@@ -135,30 +189,33 @@ class Pawn extends Chessman {
   /** @param {Chessboard} chessboard (Chess instance).fields */
   availableFields( chessboard ) {
     const availableFields = []
+    const cb = chessboard
 
-    let cb = chessboard
-    let f = availableFields
+    for ( let y = -1;  y < 2;  y++ )
+      for ( let x = -1;  x < 2;  x++ )
+        if ( cb.isABeatableField( this.x + x, this.y + y, this ) ) {
+          const field = cb.get( this.x + x, this.y + y )
 
-    if ( cb.isABeatableField( this.x - 1, this.y, this ) )
-      f.push( { x:(this.x - 1), y:this.y } )
-
-    if ( cb.isABeatableField( this.x + 1, this.y, this ) )
-      f.push( { x:(this.x + 1), y:this.y } )
-
-    if ( cb.isABeatableField( this.x, this.y - 1, this ) )
-      f.push( { x:this.x, y:(this.y - 1) } )
-
-    if ( cb.isABeatableField( this.x, this.y + 1, this ) )
-      f.push( { x:this.x, y:(this.y + 1) } )
+          if ( x ** 2 == 1 && y ** 2 == 1  ) {
+            if ( field )
+              availableFields.push( { x:(this.x + x), y:(this.y + y) } )
+          }
+          else if ( !field )
+            availableFields.push( { x:(this.x + x), y:(this.y + y) } )
+        }
 
     return availableFields
   }
 
-  checkJump( { x, y } ) {
-    if ( x == this.x ^ y == this.y && (
-      x == this.x + 1 || x == this.x - 1 ||
-      y == this.y + 1 || y == this.y - 1 ) )
-        return true
+  checkJump( { x, y }, chessboard ) {
+    if ( (this.x - x) ** 2 <= 1 && (this.y - y) ** 2 <= 2 ) {
+      const entity = chessboard.get( x, y )
+
+      if ( this.x != x ^ this.y != y )
+        return !entity
+
+      return !!entiry
+    }
 
     return false
   }
@@ -170,26 +227,49 @@ class Rook extends Chessman {
 
   /** @param {Chessboard} chessboard (Chess instance).fields */
   availableFields( chessboard ) {
-    const availableFields = []
-
-    return availableFields
+    return Chessman.moveAlongTheAxis( chessboard, this )
   }
 
-  checkJump( { x, y } ) {}
+  checkJump( { x, y } ) {
+    if ( this.x != x || this.y != y )
+      return x == this.x ^ y == this.y
+
+    return false
+  }
 }
 class Knight extends Chessman {
   constructor( x, y, color, movingTimestamp ) {
     super( x, y, color, movingTimestamp, `knight` )
   }
 
-  /** @param {Chessboard} chessboard (Chess instance).fields */
+  /** @param {Chessboard} chessboard */
   availableFields( chessboard ) {
     const availableFields = []
+    const cb = chessboard
+
+    for ( let reverserY = -1;  reverserY < 2;  reverserY += 2 )
+      for ( let reverserX = -1;  reverserX < 2;  reverserX += 2 ) {
+        if ( cb.isABeatableField( this.x + 1 * reverserX, this.y + 2 * reverserY, this ) )
+          availableFields.push( { x:(this.x + x), y:(this.y + y) } )
+
+        if ( cb.isABeatableField( this.x + 2 * reverserX, this.y + 1 * reverserY, this ) )
+          availableFields.push( { x:(this.x + x), y:(this.y + y) } )
+      }
 
     return availableFields
   }
 
-  checkJump( { x, y } ) {}
+  checkJump( { x, y } ) {
+    x = Math.abs( this.x - x )
+    y = Math.abs( this.y - y )
+
+    if ( x == 1 )
+      return y == 2
+    else if ( y == 1 )
+      return x == 2
+
+    return false
+  }
 }
 class Bishop extends Chessman {
   constructor( x, y, color, movingTimestamp ) {
@@ -198,12 +278,35 @@ class Bishop extends Chessman {
 
   /** @param {Chessboard} chessboard (Chess instance).fields */
   availableFields( chessboard ) {
-    const availableFields = []
-
-    return availableFields
+    return Chessman.moveDiagonally( chessboard, this )
   }
 
-  checkJump( { x, y } ) {}
+  checkJump( { x, y } ) {
+    if ( this.x != x || this.y != y )
+      return Math.abs(this.x - x) == Math.abs(this.y - y)
+
+    return false
+  }
+}
+class Queen extends Chessman {
+  constructor( x, y, color, movingTimestamp ) {
+    super( x, y, color, movingTimestamp, `queen` )
+  }
+
+  /** @param {Chessboard} chessboard (Chess instance).fields */
+  availableFields( chessboard ) {
+    return [
+      ...Chessman.moveDiagonally(   chessboard, this ),
+      ...Chessman.moveAlongTheAxis( chessboard, this )
+    ]
+  }
+
+  checkJump( { x, y } ) {
+    if ( this.x != x || this.y != y )
+      return x == this.x ^ y == this.y || Math.abs(this.x - x) == Math.abs(this.y - y)
+
+    return false
+  }
 }
 class King extends Chessman {
   constructor( x, y, color, movingTimestamp ) {
@@ -214,19 +317,22 @@ class King extends Chessman {
   availableFields( chessboard ) {
     const availableFields = []
 
+    let cb = chessboard
+    let f = availableFields
+
+    for ( let y = -1;  y < 2;  y++ )
+      for ( let x = -1;  x < 2;  x++ )
+        if ( cb.isABeatableField( this.x + x, this.y + y, this ) )
+          f.push( { x:(this.x + x), y:(this.y + y) } )
+
     return availableFields
   }
 
-  checkJump( { x, y } ) {}
-}
-class Queen extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
-    super( x, y, color, movingTimestamp, `queen` )
+  checkJump( { x, y } ) {
+    return (this.x != x || this.y != y) && Math.abs(this.x - x) <= 1 && Math.abs(this.y - y) <= 1
   }
-
-  checkJump( { x, y } ) {}
 }
-class God extends Chessman {
+class God extends King {
   constructor( x, y, color, movingTimestamp ) {
     super( x, y, color, movingTimestamp, `god` )
   }
@@ -244,11 +350,11 @@ class God extends Chessman {
   }
 
   checkJump() {
-    return this.goodTimestamp()
+    return this.x != x || this.y != y
   }
 }
 
-class Player extends God {
+class Player extends King {
   constructor( x, y, color=new Color, movingTimestamp ) {
     super( x, y, color, movingTimestamp )
 
@@ -320,7 +426,7 @@ export default class Chessboard {
     const chessman = this.get( from.x, from.y )
     const nextField = this.get( to.x, to.y )
 
-    if ( !chessman || !chessman.checkJump( to, this ) || nextField === undefined )
+    if ( !chessman || !chessman.goodTimestamp() || !chessman.checkJump( to, this ) || nextField === undefined )
       return false
 
     if ( nextField && Color.isEqual( chessman, nextField ) )
@@ -378,7 +484,7 @@ export default class Chessboard {
   isABeatableField( x, y, entity ) {
     const field = this.get( x, y )
 
-    return field !== undefined && `${(field || {}).color}` != `${entity.color}`
+    return field !== undefined && !Color.isEqual( field, entity )
   }
 
   isAbove( x, y ) {
