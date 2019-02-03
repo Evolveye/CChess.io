@@ -56,6 +56,7 @@ export class Color {
       this.b = color.b
     }
     else if ( /#[0-9a-f]{6}/i.test( color ) ) {
+      console.log( color )
       this.r = parseInt( color.slice( 1, 3 ), 16 )
       this.g = parseInt( color.slice( 3, 5 ), 16 )
       this.b = parseInt( color.slice( 5, 7 ), 16 )
@@ -522,6 +523,8 @@ export default class Chessboard {
     const chessman = this.get( from.x, from.y )
     const nextField = this.get( to.x, to.y )
 
+    console.log( `f:`, !this.checkJump( from, to ), ` t:`, nextField && Color.isEqual( nextField, `#ffffff` ) )
+
     if ( !this.checkJump( from, to ) )
       return false
 
@@ -546,7 +549,6 @@ export default class Chessboard {
     chessman.x = to.x
     chessman.y = to.y
     chessman.lastJump = Date.now()
-
 
     return (nextField || {}).id || true
   }
