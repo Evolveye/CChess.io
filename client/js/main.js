@@ -2,6 +2,7 @@ import Game from "./game.js"
 import ws from "./ws.js"
 
 const nicknameInput = document.querySelector( `.lobby input` )
+nicknameInput.focus()
 nicknameInput.onkeydown = e => {
   if ( e.keyCode != 13 )
     return
