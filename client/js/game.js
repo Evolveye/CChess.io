@@ -10,7 +10,7 @@ export default class Game {
 
       <section class="server_connection"></section>
 
-      <section class="version">Approximate v: inDev_2.7.0</section>
+      <section class="version">Approximate v: inDev_2.10.0</section>
 
       <section class="chat"></section>
 
@@ -28,7 +28,7 @@ export default class Game {
     this.map = null
     this.chessmanSize = null
     this.lastClickedField = { x:null, y:null }
-    this.runningOnMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)
+    this.runningOnMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test( navigator.userAgent )
     this.camera = {
       spaceAroundgame: 100,
       cursor: { x:null, y:null },

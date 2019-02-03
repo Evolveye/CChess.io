@@ -500,8 +500,14 @@ export default class Chessboard {
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
-        if ( Color.isEqual( this.get( x, y ), color ) )
-          deletedEntities.push( this.remove( x, y ) )
+        const entity = this.get( x, y )
+        if ( Color.isEqual( entity, color ) ) {
+          nextField.color = color.txtFormat
+
+          if ( `setTextureColor` in nextField )
+            nextField.setTextureColor( color )
+          // deletedEntities.push( this.remove( x, y ) )
+        }
       }
 
     return deletedEntities
@@ -519,9 +525,6 @@ export default class Chessboard {
     if ( nextField ) {
       fields[ from.y ][ from.x ] = nextField
 
-      if ( `setTextureColor` in nextField )
-        nextField.setTextureColor( chessman.color )
-
       if ( `id` in nextField )
         this.removePlayer( nextField.color )
       else if ( Color.isEqual( nextField, `#ffffff` ) ) {
@@ -529,6 +532,9 @@ export default class Chessboard {
         nextField.y = from.y
         nextField.lastJump = Date.now()
         nextField.color = chessman.color
+
+        if ( `setTextureColor` in nextField )
+          nextField.setTextureColor( chessman.color )
       }
     }
     else
