@@ -88,9 +88,9 @@ export class Color {
       if ( typeof entity == `string` )
         return `${entity}`
       if ( `txtFormat` in entity )
-        return entityA.txtFormat
+        return entity.txtFormat
       if ( `color` in entity )
-        return entity.color
+        return entity.color.txtFormat
     }
 
     return `${getColorData( entityA )}` == `${getColorData( entityB )}`
@@ -499,9 +499,10 @@ export default class Chessboard {
     const { height, width } = this
 
     for ( let y = 0;  y < height;  y++ )
-      for ( let x = 0;  x < width;  x++ )
+      for ( let x = 0;  x < width;  x++ ) {
         if ( Color.isEqual( this.get( x, y ), color ) )
           deletedEntities.push( this.remove( x, y ) )
+      }
 
     return deletedEntities
   }
