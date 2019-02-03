@@ -504,10 +504,10 @@ export default class Chessboard {
       for ( let x = 0;  x < width;  x++ ) {
         const entity = this.get( x, y )
         if ( Color.isEqual( entity, color ) ) {
-          nextField.color = color.txtFormat
+          entity.color = color.txtFormat
 
-          if ( `setTextureColor` in nextField )
-            nextField.setTextureColor( color )
+          if ( `setTextureColor` in entity )
+            entity.setTextureColor( color )
           // deletedEntities.push( this.remove( x, y ) )
         }
       }
