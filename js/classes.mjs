@@ -509,10 +509,10 @@ export default class Chessboard {
             continue
           }
 
-          entity.color = `#ffffff`
+          entity.color = new Color( `#ffffff` )
 
           if ( `setTextureColor` in entity )
-            entity.setTextureColor( new Color( `#ffffff` ) )
+            entity.setTextureColor( new Color( entity.color ) )
           // deletedEntities.push( this.remove( x, y ) )
         }
       }
