@@ -44,7 +44,7 @@ export function setTexture( src, chessman ) {
 
   c.tex.onload = () => c.setTextureColor( c.color )
 }
-
+let log = false
 export class Color {
   constructor( color ) {
 
@@ -93,6 +93,9 @@ export class Color {
       if ( `color` in entity )
         return entity.color.txtFormat
     }
+
+    if ( log )
+      console.log( entityA, entityB )
 
     return `${getColorData( entityA )}` == `${getColorData( entityB )}`
   }
@@ -527,7 +530,7 @@ export default class Chessboard {
       return false
 
     if ( nextField )
-      console.log( `#ffffff`, nextField.color, Color.isEqual( nextField, `#ffffff` ) )
+      log = true
 
 
     if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
@@ -546,6 +549,8 @@ export default class Chessboard {
 
       fields[ from.y ][ from.x ] = null
     }
+    if ( log )
+      log = false
 
     fields[ to.y ][ to.x ] = chessman
     chessman.x = to.x
