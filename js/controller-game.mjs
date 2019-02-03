@@ -64,7 +64,12 @@ export default class GameController {
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {
-    const player = this.spawn( `player`, new Color )
+    let color = new Color
+
+    while ( !color.r || !color.g || !color.b )
+      color = new Color
+
+    const player = this.spawn( `player`, color )
     player.id = playerController.id
     player.nickname = nickname
 
