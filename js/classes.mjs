@@ -236,9 +236,26 @@ class Rook extends Chessman {
     return Chessman.moveAlongTheAxis( chessboard, this )
   }
 
-  checkJump( { x, y } ) {
-    if ( this.x != x || this.y != y )
-      return x == this.x ^ y == this.y
+  checkJump( { x, y }, chessboard ) {
+    if ( x == this.x ^ y == this.y ) {
+      let addToX = 0
+      let addToY = 0
+
+      if ( this.x != x )
+        addToX = this.x > x  ?  1  : -1
+      if ( this.y != y )
+        addToY = this.y > y  ?  1  : -1
+
+      while ( x != this.x || y != this.y ) {
+        x += addToX
+        y += addToY
+
+        if ( chessboard.get( x, y ) && (x != this.x || y != this.y) )
+          return false
+      }
+
+      return true
+    }
 
     return false
   }
@@ -287,9 +304,21 @@ class Bishop extends Chessman {
     return Chessman.moveDiagonally( chessboard, this )
   }
 
-  checkJump( { x, y } ) {
-    if ( this.x != x || this.y != y )
-      return Math.abs(this.x - x) == Math.abs(this.y - y)
+  checkJump( { x, y }, chessboard ) {
+    if ( this.x != x && this.y != y && Math.abs(this.x - x) == Math.abs(this.y - y) ) {
+      const addToX = this.x > x  ?  1  : -1
+      const addToY = this.y > y  ?  1  : -1
+
+      while ( x != this.x ) {
+        x += addToX
+        y += addToY
+
+        if ( x != this.x && chessboard.get( x, y ) )
+          return false
+      }
+
+      return true
+    }
 
     return false
   }
@@ -307,11 +336,32 @@ class Queen extends Chessman {
     ]
   }
 
-  checkJump( { x, y } ) {
-    if ( this.x != x || this.y != y )
-      return x == this.x ^ y == this.y || Math.abs(this.x - x) == Math.abs(this.y - y)
+  checkJump( { x, y }, chessboard ) {
+    let addToX = 0
+    let addToY = 0
 
-    return false
+    if ( x == this.x ^ y == this.y ) {
+      if ( this.x != x )
+        addToX = this.x > x  ?  1  : -1
+      else if ( this.y != y )
+        addToY = this.y > y  ?  1  : -1
+    }
+    else if ( this.x != x && this.y != y && Math.abs(this.x - x) == Math.abs(this.y - y) ) {
+      addToX = this.x > x  ?  1  : -1
+      addToY = this.y > y  ?  1  : -1
+    }
+    else
+      return false
+
+    while ( x != this.x || y != this.y ) {
+      x += addToX
+      y += addToY
+
+      if ( chessboard.get( x, y ) && (x != this.x || y != this.y) )
+        return false
+    }
+
+    return true
   }
 }
 class King extends Chessman {
