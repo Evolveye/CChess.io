@@ -521,15 +521,16 @@ export default class Chessboard {
     const fields = this.fields
 
     const chessman = this.get( from.x, from.y )
-    const nextField = this.get( to.x, to.y )
-
-    console.log( `f:`, !this.checkJump( from, to ), ` t:`, nextField && Color.isEqual( nextField, `#ffffff` ) )
+    const nextField = this.get( to.x, to.y ))
 
     if ( !this.checkJump( from, to ) )
       return false
 
+    if ( nextField )
+      console.log( `#ffffff`, nextField.color.txtFormat, Color.isEqual( nextField, `#ffffff` ) )
+
+
     if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
-      console.log( true )
       fields[ from.y ][ from.x ] = nextField
       nextField.x = from.x
       nextField.y = from.y
