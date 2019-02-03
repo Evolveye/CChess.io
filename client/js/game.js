@@ -1,8 +1,6 @@
 import ws from "./ws.js"
 import Chessboard, { Color, setTexture } from "/$/classes"
 import Chat from "./chat.js"
-// import Chessboard from "../../js/classes.mjs"
-
 
 export default class Game {
   constructor() {
@@ -30,6 +28,7 @@ export default class Game {
     this.map = null
     this.chessmanSize = null
     this.lastClickedField = { x:null, y:null }
+    this.runningOnMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)
     this.camera = {
       spaceAroundgame: 100,
       cursor: { x:null, y:null },
@@ -82,11 +81,19 @@ export default class Game {
       }, 1000 / 60 )
       requestAnimationFrame( () => this.draw() )
 
-      window.addEventListener(   `resize`,    () => this.resize() )
-      document.addEventListener( `mouseup`,   () => this.cursorUp() )
-      document.addEventListener( `mousedown`, () => this.cursorDown() )
-      document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
-      document.addEventListener( `keypress`,  () => {
+      if ( this.runningOnMobile ) {
+        document.addEventListener( `touchstart`, e  => this.cursorDown( e ) )
+        document.addEventListener( `touchend`,   () => this.cursorUp() )
+        document.addEventListener( `touchmove`,  e  => this.cursorMove( e ) )
+      }
+      else {
+        document.addEventListener( `mouseup`,    () => this.cursorUp() )
+        document.addEventListener( `mousedown`,  () => this.cursorDown() )
+        document.addEventListener( `mousemove`,  e  => this.cursorMove( e ) )
+      }
+
+      window.addEventListener(   `resize`,     () => this.resize() )
+      document.addEventListener( `keypress`,   () => {
         if ( !Game.key( `enter`) )
           return
 
@@ -148,13 +155,24 @@ export default class Game {
     this.cameraCursorUpdate( x, y )
   }
 
-  cursorDown() {
+  cursorDown( e ) {
     this.console.textContent = `mousedown`
 
     const c = this.camera
+
+    if ( this.runningOnMobile ) {
+      const coords = e.touches[0] || e.changedTouches[0]
+      c.cursor.x = coords.pageX
+      c.cursor.y = coords.pageY
+    }
+
     const x = Math.floor( (c.cursor.x - c.x) / this.chessboard.tileSize )
     const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
     const field = this.chessboard.get( x, y )
+
+
+    if ( field )
+      this.console.textContent = `mousedown | x:${x} y:${y} | x:${field.x} y:${field.y}`
 
     if ( Color.isEqual( field, this.player ) ) {
       this.lastClickedField = field
@@ -167,15 +185,16 @@ export default class Game {
   }
 
   cursorMove( e ) {
-    this.console.textContent = `mousemove`
+    this.console.textContent = `moving`
 
     const c = this.camera
     const { width, height, tileSize } = this.chessboard
-    const newX = e.clientX - c.cursor.x + c.x
-    const newY = e.clientY - c.cursor.y + c.y
+    const coords = this.runningOnMobile  ?  e.touches[0] || e.changedTouches[0]  :  e
+    const newX = coords.clientX - c.cursor.x + c.x
+    const newY = coords.clientY - c.cursor.y + c.y
 
-    c.cursor.x = e.clientX
-    c.cursor.y = e.clientY
+    c.cursor.x = coords.pageX
+    c.cursor.y = coords.pageY
 
     const x = Math.floor( (c.cursor.x - c.x) / tileSize )
     const y = Math.floor( (c.cursor.y - c.y) / tileSize )
@@ -185,12 +204,12 @@ export default class Game {
     if ( c.action != `moving` )
       return
 
-
     if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
       c.x = newX
 
     if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
       c.y = newY
+
   }
 
   logic() {
