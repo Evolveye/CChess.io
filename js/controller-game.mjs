@@ -19,7 +19,7 @@ export default class GameController {
   }
 
   testNickname( nickname ) {
-    for ( const player of this.players.keys() )
+    for ( const player of this.players.values() )
       if ( player.nickname == nickname )
         return false
 
@@ -72,11 +72,12 @@ export default class GameController {
 
     this.players.set( playerController.id, Object.assign( playerController, player ) )
 
-    playerInitializer( {
-      chessboard: this.chessboard,
-      chessmanSize: this.chessboard.tileSize * .9,
-      player
-    } )
+    let chessmanSize = this.chessboard.tileSize * .9
+
+    if ( !(chessmanSize % 2) )
+      chessmanSize -= 1
+
+    playerInitializer( { chessboard:this.chessboard, chessmanSize, player } )
   }
 
   destroyPlayer( id ) {
