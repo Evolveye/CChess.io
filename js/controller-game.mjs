@@ -55,9 +55,10 @@ export default class GameController {
     return cb.set( { type, x, y, color, movingTimestamp:100 } )
   }
 
-  spawnPlayer( playerController, playerInitializer ) {
+  spawnPlayer( playerController, nickname, playerInitializer ) {
     const player = this.spawn( `player`, new Color )
     player.id = playerController.id
+    player.nickname = nickname
 
     playerController.broadcast( `game-update-spawn`, player )
 

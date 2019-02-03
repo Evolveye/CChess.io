@@ -26,7 +26,7 @@ export default class PlayerController {
         break
 
       case `game-init`:
-        this.gameController.spawnPlayer( this, data => this.send( `game-init`, data ) )
+        this.gameController.spawnPlayer( this, data, data => this.send( `game-init`, data ) )
         break
 
       case `game-update-player`:

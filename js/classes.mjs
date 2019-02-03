@@ -435,6 +435,8 @@ export default class Chessboard {
 
           if ( `id` in field )
             entity.id = field.id
+          if ( `nickname` in field )
+            entity.nickname = field.nickname
         }
   }
 

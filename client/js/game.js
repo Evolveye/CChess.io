@@ -39,7 +39,12 @@ export default class Game {
 
     this.resize()
 
-    ws.send( `game-init`, `chess-standard` )
+    let nickname = ``
+    do {
+      nickname = window.prompt( `Podaj swój nick` )
+    } while ( !nickname )
+
+    ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
       const { width, height, tileSize, fields } = chessboard
       const c = this.camera
@@ -270,6 +275,9 @@ export default class Game {
         let eY = c.y + (y + .5) * tSize - this.chessmanSize / 2
 
         ctx.drawImage( entity.tex, eX, eY, this.chessmanSize, this.chessmanSize )
+
+        if ( entity.nickname )
+          ctx.fillText( entity.nickname, eX, eY )
       }
   }
 
@@ -295,6 +303,8 @@ export default class Game {
     this.canvas.height = window.innerHeight
 
     this.ctx.imageSmoothingEnabled = false
+
+    this.ctx.font = "30px Arial"
   }
 
   end() {
