@@ -18,6 +18,14 @@ export default class GameController {
     }, 1000 / 60 )
   }
 
+  testNickname( nickname ) {
+    for ( const player of this.players.keys() )
+      if ( player.nickname == nickname )
+        return false
+
+    return true
+  }
+
   chessboardFiller() {
     const cb = this.chessboard
     const { width, height } = cb

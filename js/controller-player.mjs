@@ -25,6 +25,10 @@ export default class PlayerController {
         this.send( `chat-new_message`, data )
         break
 
+      case `game-nickname`:
+        this.send( `game-nickname`, this.gameController.testNickname( data ) )
+        break
+
       case `game-init`:
         this.gameController.spawnPlayer( this, data, data => this.send( `game-init`, data ) )
         break

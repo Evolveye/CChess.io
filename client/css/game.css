@@ -1,0 +1,47 @@
+.game > * {
+  position: absolute;
+  color: #FFFFFFBB;
+  user-select: none;
+}
+
+.game .chat {
+  left: 10px;
+  top: 10px;
+}
+  .game .chat.active {
+    background: #00000044;
+  }
+  .game .chat-message {
+    margin: 0;
+    padding: 5px;
+    background-color: #00000044;
+  }
+  .game .chat-input {
+    position: relative;
+    color: inherit;
+    padding: 5px;
+  }
+
+.game .canvas-main {
+  width: 100vw;
+  height: 100vh;
+  background-color: #666
+}
+
+.game .server_connection {
+  background-color: #333;
+  right: 10px;
+  top: 10px;
+}
+
+.game .version {
+  background-color: #333;
+  right: 10px;
+  bottom: 10px
+}
+
+.game .console {
+  background-color: #333;
+  left: 10px;
+  bottom: 10px
+}

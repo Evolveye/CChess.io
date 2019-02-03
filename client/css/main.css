@@ -2,58 +2,26 @@ body {
   overflow: hidden;
   margin: 0;
   font-family: monospace;
+  background: brown;
 }
 input {
   background: transparent;
   border: none;
 }
-.game > * {
+input:focus {
+  outline: none;
+}
+
+.lobby label {
   position: absolute;
-  color: #FFFFFFBB;
-  user-select: none;
+  left: 50%;
+  top: 50%;
+  transform: translate( -50%, -50% );
 }
-
-.game .chat {
-  left: 10px;
-  top: 10px;
-}
-  .game .chat.active {
+  .lobby label * {
+    display: block;
+  }
+  .lobby label input {
     background: #00000044;
-  }
-  .game .chat-message {
-    margin: 0;
-    padding: 5px;
-    background-color: #00000044;
-  }
-  .game .chat-input {
-    position: relative;
-    color: inherit;
     padding: 5px;
   }
-    .game .chat-input:focus {
-      outline: none;
-    }
-
-.game .canvas-main {
-  width: 100vw;
-  height: 100vh;
-  background-color: #666
-}
-
-.game .server_connection {
-  background-color: #333;
-  right: 10px;
-  top: 10px;
-}
-
-.game .version {
-  background-color: #333;
-  right: 10px;
-  bottom: 10px
-}
-
-.game .console {
-  background-color: #333;
-  left: 10px;
-  bottom: 10px
-}

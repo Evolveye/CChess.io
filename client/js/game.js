@@ -3,12 +3,10 @@ import Chessboard, { Color, setTexture } from "/$/classes"
 import Chat from "./chat.js"
 
 export default class Game {
-  constructor() {
+  constructor( nickname ) {
     this.box = document.querySelector( `.game` )
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
-
-      <section class="server_connection"></section>
 
       <section class="version">Approximate v: inDev_2.10.0</section>
 
@@ -38,11 +36,6 @@ export default class Game {
     }
 
     this.resize()
-
-    let nickname = ``
-    do {
-      nickname = window.prompt( `Podaj swój nick` )
-    } while ( !nickname )
 
     ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
@@ -242,6 +235,7 @@ export default class Game {
     const c = this.camera
     const ctx = this.ctx
     const tSize = cb.tileSize
+    const cSize = this.chessmanSize
 
     ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
 
@@ -271,13 +265,20 @@ export default class Game {
         if ( !entity )
           continue
 
-        let eX = c.x + (x + .5) * tSize - this.chessmanSize / 2
-        let eY = c.y + (y + .5) * tSize - this.chessmanSize / 2
+        let eX = c.x + (x + .5) * tSize
+        let eY = c.y + (y + .5) * tSize
 
-        ctx.drawImage( entity.tex, eX, eY, this.chessmanSize, this.chessmanSize )
+        ctx.drawImage( entity.tex, eX - cSize / 2, eY - cSize / 2, cSize, cSize )
 
-        if ( entity.nickname )
-          ctx.fillText( entity.nickname, eX, eY )
+        if ( entity.nickname ) {
+          const nickname = entity.nickname
+          const width = ctx.measureText( nickname ).width
+
+          ctx.fillStyle = `#00000044`
+          ctx.fillRect( eX - 5 - width / 2, eY - 5 - 15 - cSize / 2, width + 10, 15 + 10 )
+          ctx.fillStyle = `#ffffff`
+          ctx.fillText( nickname, eX - width / 2, eY - cSize / 2 )
+        }
       }
   }
 
@@ -304,7 +305,8 @@ export default class Game {
 
     this.ctx.imageSmoothingEnabled = false
 
-    this.ctx.font = "30px Arial"
+    this.ctx.font = "15px monospace"
+    this.ctx.textBaseline = `bottom`
   }
 
   end() {
