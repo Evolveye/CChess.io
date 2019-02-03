@@ -429,15 +429,8 @@ export default class Chessboard {
 
     for ( const row of fields )
       for ( const field of row )
-        if ( field ) {
-          let { x, y, color, type, movingTimestamp } = field
-          const entity = this.set( { type, x, y, color, movingTimestamp }, isTextured )
-
-          if ( `id` in field )
-            entity.id = field.id
-          if ( `nickname` in field )
-            entity.nickname = field.nickname
-        }
+        if ( field )
+          this.set( field, isTextured )
   }
 
   get( x, y ) {
@@ -466,6 +459,8 @@ export default class Chessboard {
 
     if ( `id` in entity )
       instance.id = entity.id
+    if ( `nickname` in entity )
+      instance.nickname = entity.nickname
 
     this.fields[ y ][ x ] = instance
 
