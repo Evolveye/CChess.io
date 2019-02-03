@@ -525,23 +525,22 @@ export default class Chessboard {
     if ( !this.checkJump( from, to ) )
       return false
 
-    if ( nextField ) {
+    if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
       fields[ from.y ][ from.x ] = nextField
+      nextField.x = from.x
+      nextField.y = from.y
+      nextField.lastJump = Date.now()
+      nextField.color = chessman.color
 
-      if ( `id` in nextField )
-        this.removePlayer( nextField.color )
-      else if ( Color.isEqual( nextField, `#ffffff` ) ) {
-        nextField.x = from.x
-        nextField.y = from.y
-        nextField.lastJump = Date.now()
-        nextField.color = chessman.color
-
-        if ( `setTextureColor` in nextField )
-          nextField.setTextureColor( chessman.color )
-      }
+      if ( `setTextureColor` in nextField )
+        nextField.setTextureColor( chessman.color )
     }
-    else
+    else {
+      if ( nextField && `id` in nextField )
+        this.removePlayer( nextField.color )
+
       fields[ from.y ][ from.x ] = null
+    }
 
     fields[ to.y ][ to.x ] = chessman
     chessman.x = to.x
