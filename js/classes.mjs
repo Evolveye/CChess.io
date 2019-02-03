@@ -521,7 +521,7 @@ export default class Chessboard {
     const fields = this.fields
 
     const chessman = this.get( from.x, from.y )
-    const nextField = this.get( to.x, to.y ))
+    const nextField = this.get( to.x, to.y )
 
     if ( !this.checkJump( from, to ) )
       return false
