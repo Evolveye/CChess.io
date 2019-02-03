@@ -49,7 +49,7 @@ export class Color {
 
     this.txtFormat = ``
 
-    if ( typeof color != `string` && `r` in color && `g` in color && `b` in color ) {
+    if ( color && typeof color != `string` && `r` in color && `g` in color && `b` in color ) {
       this.r = color.r
       this.g = color.g
       this.b = color.b
