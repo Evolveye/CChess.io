@@ -527,7 +527,7 @@ export default class Chessboard {
       return false
 
     if ( nextField )
-      console.log( `#ffffff`, nextField.color.txtFormat, Color.isEqual( nextField, `#ffffff` ) )
+      console.log( `#ffffff`, nextField.color, Color.isEqual( nextField, `#ffffff` ) )
 
 
     if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
