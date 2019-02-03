@@ -529,6 +529,7 @@ export default class Chessboard {
       return false
 
     if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
+      console.log( true )
       fields[ from.y ][ from.x ] = nextField
       nextField.x = from.x
       nextField.y = from.y
