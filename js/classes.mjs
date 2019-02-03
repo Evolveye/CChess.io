@@ -49,13 +49,12 @@ export class Color {
 
     this.txtFormat = ``
 
-    if ( color && `r` in color && `g` in color && `b` in color ) {
+    if ( typeof color != `string` && `r` in color && `g` in color && `b` in color ) {
       this.r = color.r
       this.g = color.g
       this.b = color.b
     }
     else if ( /#[0-9a-f]{6}/i.test( color ) ) {
-      console.log( color )
       this.r = parseInt( color.slice( 1, 3 ), 16 )
       this.g = parseInt( color.slice( 3, 5 ), 16 )
       this.b = parseInt( color.slice( 5, 7 ), 16 )
