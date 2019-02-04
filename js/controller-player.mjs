@@ -52,6 +52,10 @@ export default class PlayerController {
           type: `user_info`
         } )
         break
+
+      case `ping`:
+        this.send( `pong` )
+        break
     }
   }
 }

@@ -22,6 +22,9 @@ export default class Game {
     this.chat = new Chat( this.box.querySelector( `.chat` ) )
     this.console = this.box.querySelector( `.console` )
 
+    this.ws = ws
+    this.ping = 0
+    this.pingCounter = 0
     this.mode = `game`
     this.map = null
     this.chessmanSize = null
@@ -36,8 +39,12 @@ export default class Game {
     }
 
     this.resize()
+
+    ws.on( `pong`, () => this.console.textContent = `Ping: ${Date.now() - this.ping}ms` )
     ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
+      this.console.textContent = `Ping: ${Date.now() - this.ping}ms`
+
       const { width, height, tileSize, fields } = chessboard
       const c = this.camera
 
@@ -76,6 +83,14 @@ export default class Game {
         this.logic()
         requestAnimationFrame( () => this.draw() )
       }, 1000 / 60 )
+      setInterval( () => {
+        if ( !this.pingCounter )
+          return
+
+        this.ping = Date.now()
+        --this.pingCounter
+        ws.send( `ping` )
+      }, 1000 * 15 )
       requestAnimationFrame( () => this.draw() )
 
       if ( this.runningOnMobile ) {
@@ -132,7 +147,7 @@ export default class Game {
       if ( field.x == x && field.y == y )
         c.action = `jump-2_clicks`
       else if ( cb.checkJump( from, to ) ) {
-        ws.send( `game-update-player`, { from, to } )
+        this.send( `game-update-player`, { from, to } )
         c.action = null
       }
       else
@@ -140,7 +155,7 @@ export default class Game {
     }
     else if ( c.action == `jump-2_clicks` ) {
       if ( (field.x != x || field.y != y) && cb.checkJump( from, to ) )
-        ws.send( `game-update-player`, { from, to } )
+        this.send( `game-update-player`, { from, to } )
 
       c.action = null
     }
@@ -291,6 +306,10 @@ export default class Game {
           return this.box.style.cursor = `grabbing`
 
     this.box.style.cursor = `default`
+  }
+  send( type, data ) {
+    this.pingCounter = 15
+    this.ws.send( type, data )
   }
 
   resize() {
