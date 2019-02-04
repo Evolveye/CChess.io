@@ -99,10 +99,16 @@ class Chessman {
   constructor( x, y, color, movingTimestamp=1000, type ) {
     this.x = x
     this.y = y
+    this.spawnTime = Date.now()
+    this.spawnProtection = 0
     this.color = new Color( color || `#ffffff` )
     this.movingTimestamp = movingTimestamp
     this.lastJump = 0
     this.type = type
+  }
+
+  protected() {
+    return this.spawnTime + this.spawnProtection * 1000 - Date.now() >= 0
   }
 
   /** Checker of timestamp from last jum to now
@@ -412,6 +418,7 @@ class God extends King {
 class Player extends King {
   constructor( x, y, color=new Color, movingTimestamp ) {
     super( x, y, color, movingTimestamp )
+    this.spawnProtection = 5
 
     this.id = Math.random()
   }
@@ -439,7 +446,8 @@ export default class Chessboard {
   set( entity, isTextured ) {
     const { type, x, y, color, movingTimestamp } = entity
     const field = this.get( x, y )
-    const instance = ( () => { switch ( type ) { // `${type.charAt( 0 ).toUpperCase()}${type.slice( 1 ).toLoverCase()}`
+
+    const instance = ( () => { switch ( `id` in entity  ?  `player`  :  type ) { // `${type.charAt( 0 ).toUpperCase()}${type.slice( 1 ).toLoverCase()}`
       case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
       case `rook`:   return new Rook(   x, y, color, movingTimestamp )
       case `knight`: return new Knight( x, y, color, movingTimestamp )
@@ -475,13 +483,13 @@ export default class Chessboard {
   }
 
   checkJump( from, to ) {
-    const chessman = this.get( from.x, from.y )
+    const chessman = this.get( from.x, from.y ) || {}
     const nextField = this.get( to.x, to.y )
 
     if ( !chessman || !chessman.goodTimestamp() || !chessman.checkJump( to, this ) || nextField === undefined )
       return false
 
-    if ( nextField && Color.isEqual( chessman, nextField ) )
+    if ( nextField && (nextField.protected() || Color.isEqual( chessman, nextField )) )
       return false
 
     return true

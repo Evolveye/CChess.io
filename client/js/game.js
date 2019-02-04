@@ -268,6 +268,11 @@ export default class Game {
         let eX = c.x + (x + .5) * tSize
         let eY = c.y + (y + .5) * tSize
 
+        if ( entity.protected() ) {
+          ctx.fillStyle = `#0000ff44`
+          ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+        }
+
         ctx.drawImage( entity.tex, eX - cSize / 2, eY - cSize / 2, cSize, cSize )
 
         if ( entity.nickname ) {
