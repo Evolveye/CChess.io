@@ -83,6 +83,8 @@ export default class Game {
         document.addEventListener( `touchstart`, e  => this.cursorDown( e ) )
         document.addEventListener( `touchend`,   () => this.cursorUp() )
         document.addEventListener( `touchmove`,  e  => this.cursorMove( e ) )
+        this.chat.input.placeholder = `Chat...`
+        this.chat.box.classList.add( `active` )
       }
       else {
         document.addEventListener( `mouseup`,    () => this.cursorUp() )

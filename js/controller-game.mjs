@@ -85,7 +85,7 @@ export default class GameController {
       y = random( 0, cb.height )
     } while ( cb.get( x, y ) )
 
-    return cb.set( { type, x, y, color, movingTimestamp:100 } )
+    return cb.set( { type, x, y, color, movingTimestamp:500 } )
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {

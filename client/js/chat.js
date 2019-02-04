@@ -16,6 +16,7 @@ export default class Chat {
         <input maxlength="${msgMaxLen}" class="chat-input">
       </span>
     `
+    this.msgLifeTime = msgLifeTime
     this.messagesList = chatbox.querySelector( `.chat-messages` )
     this.input = chatbox.querySelector( `.chat-input` )
 
@@ -32,7 +33,7 @@ export default class Chat {
       }
     }
 
-    ws.on( `chat-new_message`, this.newMessage )
+    ws.on( `chat-new_message`, userData =>this.newMessage( userData ) )
   }
 
   newMessage( userData ) {
@@ -45,7 +46,7 @@ export default class Chat {
     this.messagesList.insertAdjacentElement( `beforeend`, message )
 
     if ( userData.type != `disconnected` )
-      setTimeout( () => message.remove(), 1000 * msgLifeTime )
+      setTimeout( () => message.remove(), 1000 * this.msgLifeTime )
   }
 
   send( type, data ) {
