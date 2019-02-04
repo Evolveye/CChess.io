@@ -73,7 +73,10 @@ export default class Game {
         this.logic()
         requestAnimationFrame( () => this.draw() )
       }, 1000 / 60 )
-      setInterval( () => ws.send( `ping` ), 1000 * 15 )
+      setInterval( () => {
+        this.ping = Date.now()
+        ws.send( `ping` )
+      }, 1000 * 15 )
       requestAnimationFrame( () => this.draw() )
 
       if ( this.runningOnMobile ) {
