@@ -32,23 +32,20 @@ export default class Chat {
       }
     }
 
-    const newMessage = userData => {
-      const message = userDataConstructor( userData )
-      message.classList.add( `chat-message` )
+    ws.on( `chat-new_message`, this.newMessage )
+  }
 
-      if ( userData.type )
-        message.className += ` is-${userData.type}`
+  newMessage( userData ) {
+    const message = userDataConstructor( userData )
+    message.classList.add( `chat-message` )
 
-      this.messagesList.insertAdjacentElement( `beforeend`, message )
+    if ( userData.type )
+      message.className += ` is-${userData.type}`
 
+    this.messagesList.insertAdjacentElement( `beforeend`, message )
+
+    if ( userData.type != `disconnected` )
       setTimeout( () => message.remove(), 1000 * msgLifeTime )
-    }
-
-    ws.on( `chat-new_message`, newMessage )
-    ws.onclose( () => newMessage( {
-      data: `Disconnected 👺`,
-      type: `server`
-    } ) )
   }
 
   send( type, data ) {

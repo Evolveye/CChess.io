@@ -47,6 +47,13 @@ export default class Game {
 
     this.resize()
 
+    ws.onclose( () => {
+      this.mode = `disconnected`
+      this.chat.newMessage( {
+        data: `Disconnected 👺`,
+        type: `disconnected`
+      } )
+    } )
     ws.on( `pong`, () => this.console.textContent = `Ping: ${Date.now() - this.ping}ms` )
     ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
@@ -142,6 +149,9 @@ export default class Game {
   }
 
   cursorUp() {
+    if ( this.mode == `disconnected` )
+      return
+
     const c = this.camera
     const cb = this.chessboard
     const field = this.lastClickedField
@@ -177,6 +187,9 @@ export default class Game {
   }
 
   cursorDown( e ) {
+    if ( this.mode == `disconnected` )
+      return
+
     const c = this.camera
 
     if ( this.runningOnMobile ) {
@@ -200,6 +213,9 @@ export default class Game {
   }
 
   cursorMove( e ) {
+    if ( this.mode == `disconnected` )
+      return
+
     const c = this.camera
     const { width, height, tileSize } = this.chessboard
     const coords = this.runningOnMobile  ?  e.touches[0] || e.changedTouches[0]  :  e
