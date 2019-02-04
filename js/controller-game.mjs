@@ -87,7 +87,7 @@ export default class GameController {
       y = random( 0, cb.height )
     } while ( cb.get( x, y ) )
 
-    return cb.set( { type, x, y, color, movingTimestamp:50 } )
+    return cb.set( { type, x, y, color, movingTimestamp:150 } )
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {
@@ -131,6 +131,11 @@ export default class GameController {
   }
 
   playerUpdate( id, { from, to } ) {
+    const player = this.players.get( id )
+
+    if ( !Color.isEqual( player, this.chessboard.get( from.x, from.y ) ) )
+      return
+
     const takedField = this.chessboard.move( from, to )
 
     if ( !takedField )
