@@ -41,7 +41,9 @@ export default class GameController {
   }
 
   testNickname( nickname ) {
-    if ( !nickname.length || nickname.length > 16 )
+    nickname = nickname.trim()
+
+    if ( !nickname.length || nickname.length > 16 || /⎞/.test( nickname ) )
       return false
 
     for ( const player of this.players.values() )
