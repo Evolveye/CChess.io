@@ -15,10 +15,13 @@
     margin: 0;
     padding: 5px;
     background-color: #00000044;
+    color: #ffffff;
   }
-    .game .chat-message.is-new_user {
+    .game .chat-message.is-user_info {
       background-color: #ff000044;
-      color: #ffffff;
+    }
+    .game .chat-message.is-server {
+      background-color: #0011ff44;
     }
     .game .chat-message-nickname {
       color: #999;

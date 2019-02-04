@@ -36,7 +36,6 @@ export default class Game {
     }
 
     this.resize()
-
     ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
       const { width, height, tileSize, fields } = chessboard
@@ -117,8 +116,6 @@ export default class Game {
     } )
   }
   cursorUp() {
-    this.console.textContent = `mouseup`
-
     const c = this.camera
     const cb = this.chessboard
     const field = this.lastClickedField
@@ -154,8 +151,6 @@ export default class Game {
   }
 
   cursorDown( e ) {
-    this.console.textContent = `mousedown`
-
     const c = this.camera
 
     if ( this.runningOnMobile ) {
@@ -168,10 +163,6 @@ export default class Game {
     const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
     const field = this.chessboard.get( x, y )
 
-
-    if ( field )
-      this.console.textContent = `mousedown | x:${x} y:${y} | x:${field.x} y:${field.y}`
-
     if ( Color.isEqual( field, this.player ) ) {
       this.lastClickedField = field
       c.action = `jump`
@@ -183,8 +174,6 @@ export default class Game {
   }
 
   cursorMove( e ) {
-    this.console.textContent = `moving`
-
     const c = this.camera
     const { width, height, tileSize } = this.chessboard
     const coords = this.runningOnMobile  ?  e.touches[0] || e.changedTouches[0]  :  e

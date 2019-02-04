@@ -35,7 +35,7 @@ export default class PlayerController {
         this.gameController.spawnPlayer( this, data, data => {
           this.gameController.wssController.broadcast( `chat-new_message`, {
             content: `${this.nickname} joined the game 🌵`,
-            type: `new_user`
+            type: `user_info`
           } )
           this.send( `game-init`, data )
         } )
@@ -47,6 +47,10 @@ export default class PlayerController {
 
       case `close`:
         this.gameController.destroyPlayer( this.id )
+        this.gameController.wssController.broadcast( `chat-new_message`, {
+          content: `${this.nickname} left the game 👺`,
+          type: `user_info`
+        } )
         break
     }
   }

@@ -33,7 +33,7 @@ export default class Chat {
       }
     }
 
-    ws.on( `chat-new_message`, ( { type, content, sender } ) => {
+    const newMessage = ( { type, content, sender } ) => {
       const message = document.createElement( `p` )
       message.className = `chat-message`
 
@@ -55,7 +55,13 @@ export default class Chat {
       this.messagesList.insertAdjacentElement( `beforeend`, message )
 
       //setTimeout( () => message.remove(), 1000 * msgLifeTime )
-    } )
+    }
+
+    ws.on( `chat-new_message`, newMessage )
+    ws.onclose( () => newMessage( {
+      content: `Disconnected 👺`,
+      type: `server`
+    } ) )
   }
 
   send( type, content ) {

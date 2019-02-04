@@ -3,8 +3,6 @@ let loc = window.location
 const ws = new WebSocket( `${loc.protocol === `https:`  ?  `wss`  :  `ws`}:/${loc.host}` )
 const messagehandlers = new Map
 
-ws.onopen = () => document.querySelector( `.server_connection` ).textContent = `🌵 Connected`
-ws.onclose = () => document.querySelector( `.server_connection` ).textContent = `👺 Disconnected`
 ws.onmessage = e => {
   const { type, data } = JSON.parse( e.data )
 
@@ -50,6 +48,14 @@ const socket = {
       socket.send( `$app-change_room`, roomName )
     else
       queque.push( this.changeRoom, roomName )
+  },
+
+  onclose( func ) {
+    ws.onclose = func
+  },
+
+  onopen( func ) {
+    ws.onopen = func
   }
 }
 
