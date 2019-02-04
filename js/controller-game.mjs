@@ -85,7 +85,7 @@ export default class GameController {
       y = random( 0, cb.height )
     } while ( cb.get( x, y ) )
 
-    return cb.set( { type, x, y, color, movingTimestamp:500 } )
+    return cb.set( { type, x, y, color, movingTimestamp:50 } )
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {
@@ -123,7 +123,9 @@ export default class GameController {
         player.broadcast( `game-update-spawn`, this.spawn( entity.type ) )
 
     player.broadcast( `game-update-despawn-player`, player.color )
-    this.players.delete( id )
+
+    if ( this.players.has( id ) )
+      this.players.delete( id )
   }
 
   playerUpdate( id, { from, to } ) {
@@ -131,6 +133,9 @@ export default class GameController {
 
     if ( !takedField )
       return
+
+    if ( takedField.id && this.players.has( takedField.id ) )
+      this.players.delete( takedField.id )
 
     this.players.get( id ).scores += this.piecesPoints[ takedField.type ] || 0
     this.jumps.push( { from, to } )

@@ -18,7 +18,7 @@ export default class Game {
 
       <div class="console"></div>
 
-      <div class="version">Approximate v: inDev_2.14.0</div>
+      <div class="version">Approximate v: Alpha 0.1</div>
     `
 
     /** @type {HTMLCanvasElement} */
@@ -83,6 +83,7 @@ export default class Game {
         document.addEventListener( `touchstart`, e  => this.cursorDown( e ) )
         document.addEventListener( `touchend`,   () => this.cursorUp() )
         document.addEventListener( `touchmove`,  e  => this.cursorMove( e ) )
+
         this.chat.input.placeholder = `Chat...`
         this.chat.box.classList.add( `active` )
       }
@@ -114,8 +115,12 @@ export default class Game {
       ws.on( `game-update-scoreboard`, scoreboard => {
         this.scoreboard.innerHTML = ``
 
-        for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) )
+        for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
+          if ( field.nickname == player.nickname )
+            player.scores = field.data
+
           this.scoreboard.appendChild( userData( field ) )
+        }
       } )
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
@@ -192,9 +197,6 @@ export default class Game {
   }
 
   cursorDown( e ) {
-    if ( this.mode == `disconnected` )
-      return
-
     const c = this.camera
 
     if ( this.runningOnMobile ) {
@@ -207,7 +209,7 @@ export default class Game {
     const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
     const field = this.chessboard.get( x, y )
 
-    if ( Color.isEqual( field, this.player ) ) {
+    if ( Color.isEqual( field, this.player ) && this.mode != `disconnected` ) {
       this.lastClickedField = field
       c.action = `jump`
     }
@@ -218,9 +220,6 @@ export default class Game {
   }
 
   cursorMove( e ) {
-    if ( this.mode == `disconnected` )
-      return
-
     const c = this.camera
     const { width, height, tileSize } = this.chessboard
     const coords = this.runningOnMobile  ?  e.touches[0] || e.changedTouches[0]  :  e
@@ -273,7 +272,9 @@ export default class Game {
     const tSize = cb.tileSize
     const cSize = this.chessmanSize
 
-    ctx.clearRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
+    ctx.fillStyle = `#843737`
+    ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
+
 
     ctx.strokeStyle = `white`
     ctx.lineWidth = 1
@@ -321,6 +322,16 @@ export default class Game {
           ctx.fillText( nickname, eX - width / 2, eY - cSize / 2 )
         }
       }
+
+    // ctx.fillStyle = document.querySelector( `html` ).style.background || `#a74b36`
+    // ctx.fillRect( c.x + (this.player.x + 2) * tSize, c.y + (this.player.y - 2) * tSize, 25*tSize, 25*tSize )
+
+    // ctx.fillStyle = document.querySelector( `html` ).style.color || `#542617`
+    // for ( let i = 25; i; i-- )
+    //   for ( let j = 25; j; j-- ) {
+    //     if ( (i + j) % 2 )
+    //       ctx.fillRect( c.x + (this.player.x + 2 + j) * tSize, c.y + (this.player.y - 2 + i) * tSize, tSize, tSize )
+    //   }
   }
 
   cameraCursorUpdate( x, y ) {
@@ -354,7 +365,7 @@ export default class Game {
   }
 
   end() {
-    alert( `game over` )
+    alert( `game over\n\nZdobyte punkty: ${this.player.scores}\n\nOdśwież stronę aby grać dalej` )
   }
 
   static key( key, newBool=null ) {

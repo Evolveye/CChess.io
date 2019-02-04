@@ -468,6 +468,8 @@ export default class Chessboard {
       instance.id = entity.id
     if ( `nickname` in entity )
       instance.nickname = entity.nickname
+    if ( `scores` in entity )
+      instance.scores = entity.scores
 
     this.fields[ y ][ x ] = instance
 
