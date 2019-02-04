@@ -39,10 +39,6 @@ export default class PlayerController {
       case `game-init`:
         this.game.spawnPlayer( this, data, data => {
           this.color = data.player.color.txtFormat
-          this.send( `chat-new_message`, {
-            data: `Press enter to chat`,
-            type: `user_info`
-          } )
           this.game.broadcast( `chat-new_message`, {
             color: this.color,
             nickname: this.nickname,

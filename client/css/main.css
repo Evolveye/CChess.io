@@ -9,6 +9,7 @@ body {
   overflow: hidden;
   font-family: monospace;
   background: var( --color-main );
+  color: #fff;
 }
 .lobby label {
   position: absolute;
@@ -23,3 +24,8 @@ body {
     background: var( --color-bgr-dark );
     padding: 5px;
   }
+.general_info {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+}
