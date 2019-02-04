@@ -131,9 +131,7 @@ export default class GameController {
   }
 
   playerUpdate( id, { from, to } ) {
-    const player = this.players.get( id )
-
-    if ( !Color.isEqual( player, this.chessboard.get( from.x, from.y ) ) )
+    if ( !Color.isEqual( this.players.get( id ).color, this.chessboard.get( from.x, from.y ) ) )
       return
 
     const takedField = this.chessboard.move( from, to )
