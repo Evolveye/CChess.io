@@ -4,11 +4,11 @@ export default class GameController {
   constructor( wssController ) {
     this.wssController = wssController
     this.players = new Map
-    this.chessboard = new Chessboard( 40, 40, 60 )
+    this.chessboard = new Chessboard( 50, 50, 60 )
     this.jumps = []
 
     this.chessboardFiller()
-    setInterval( () => this.chessboardFiller(), 1000 * 60 )
+    setInterval( () => this.chessboardFiller(), 1000 * 30 )
     setInterval( () => {
       if ( !this.jumps.length )
         return
@@ -33,9 +33,9 @@ export default class GameController {
     const cb = this.chessboard
     const { width, height } = cb
     const chessPieces = {
-      pawn: 50,
+      pawn: 100,
       rook: 15,
-      knight: 25,
+      knight: 35,
       bishop: 15,
       queen: 10
     }
@@ -105,5 +105,9 @@ export default class GameController {
   playerUpdate( id, { from, to } ) {
     if ( this.chessboard.move( from, to ) )
       this.jumps.push( { from, to } )
+  }
+
+  broadcast( type, data ) {
+    this.wssController.broadcast( type, data )
   }
 }

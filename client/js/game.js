@@ -8,11 +8,15 @@ export default class Game {
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
 
-      <section class="version">Approximate v: inDev_2.13.0</section>
+      <section class="scoreboard">
+        <h2>Scoreboard</h2>
+      </section>
 
       <section class="chat"></section>
 
-      <section class="console"></section>
+      <div class="console"></div>
+
+      <div class="version">Approximate v: inDev_2.14.0</div>
     `
 
     /** @type {HTMLCanvasElement} */
@@ -307,6 +311,7 @@ export default class Game {
 
     this.box.style.cursor = `default`
   }
+
   send( type, data ) {
     this.pingCounter = 15
     this.ws.send( type, data )
@@ -318,8 +323,7 @@ export default class Game {
 
     this.ctx.imageSmoothingEnabled = false
 
-    this.ctx.font = "15px monospace"
-    this.ctx.textBaseline = `bottom`
+    this.ctx.font = `15px monospace`
   }
 
   end() {

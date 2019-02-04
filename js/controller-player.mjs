@@ -1,11 +1,11 @@
 export default class PlayerController {
   constructor( gameController, ws, wss ) {
-    this.gameController = gameController
+    this.game = gameController
     this.wss = wss
     this.ws = ws
     this.nickname = ``
-
     this.id = Math.random()
+    this.color = null
   }
 
   send( type, data ) {
@@ -23,18 +23,30 @@ export default class PlayerController {
     switch ( type ) {
       case `chat-new_message`:
         data.sender = this.nickname
-        this.gameController.wssController.broadcast( `chat-new_message`, data )
+        data.color = this.color
+        this.game.broadcast( `chat-new_message`, data )
         break
 
       case `game-nickname`:
-        this.nickname = data
-        this.send( `game-nickname`, this.gameController.testNickname( data ) )
+        if ( this.game.testNickname( data ) ) {
+          this.nickname = data
+          this.send( `game-nickname`, true )
+        }
+        else
+          this.send( `game-nickname`, false )
         break
 
       case `game-init`:
-        this.gameController.spawnPlayer( this, data, data => {
-          this.gameController.wssController.broadcast( `chat-new_message`, {
-            content: `${this.nickname} joined the game 🌵`,
+        this.game.spawnPlayer( this, data, data => {
+          this.color = data.player.color.txtFormat
+          this.send( `chat-new_message`, {
+            content: `Press enter to chat`,
+            type: `user_info`
+          } )
+          this.game.broadcast( `chat-new_message`, {
+            color: this.color,
+            sender: this.nickname,
+            content: `joined the game 🌵`,
             type: `user_info`
           } )
           this.send( `game-init`, data )
@@ -42,12 +54,12 @@ export default class PlayerController {
         break
 
       case `game-update-player`:
-        this.gameController.playerUpdate( this.id, data )
+        this.game.playerUpdate( this.id, data )
         break
 
       case `close`:
-        this.gameController.destroyPlayer( this.id )
-        this.gameController.wssController.broadcast( `chat-new_message`, {
+        this.game.destroyPlayer( this.id )
+        this.game.broadcast( `chat-new_message`, {
           content: `${this.nickname} left the game 👺`,
           type: `user_info`
         } )

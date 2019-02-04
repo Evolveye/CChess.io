@@ -1,4 +1,5 @@
 import ws from "./ws.js"
+import userDataConstructor from "./userData.js"
 
 export default class Chat {
   /**
@@ -10,8 +11,6 @@ export default class Chat {
   constructor( chatbox, msgMaxLen=127, msgLifeTime=10 ) {
     this.box = chatbox
     chatbox.innerHTML = /* html */ `
-      <div class="chat-message">Enter to chat</div>
-      <br>
       <div class="chat-messages"></div>
       <span class="chat-input_wrapper">
         <input maxlength="${msgMaxLen}" class="chat-input">
@@ -33,24 +32,12 @@ export default class Chat {
       }
     }
 
-    const newMessage = ( { type, content, sender } ) => {
-      const message = document.createElement( `p` )
-      message.className = `chat-message`
+    const newMessage = userData => {
+      const message = userDataConstructor( document.createElement( `div` ), userData )
+      message.classList.add( `chat-message` )
 
-      if ( sender ) {
-        const nickname = document.createElement( `span` )
-        nickname.className = `chat-message-nickname`
-        nickname.textContent = sender
-        message.appendChild( nickname )
-      }
-
-      const msg = document.createElement( `span` )
-      msg.className = `chat-message-content`
-      msg.textContent = content
-      message.appendChild( msg )
-
-      if ( type )
-        message.className += ` is-${type}`
+      if ( userData.type )
+        message.className += ` is-${userData.type}`
 
       this.messagesList.insertAdjacentElement( `beforeend`, message )
 

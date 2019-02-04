@@ -1,17 +1,15 @@
+:root {
+  --color-main: #a52a2a;
+  --color-bgr-dark: #0006;
+  --color-info-neutral: #00f4;
+  --color-info-good: #0f04;
+  --color-info-dab: #f004;
+}
 body {
   overflow: hidden;
-  margin: 0;
   font-family: monospace;
-  background: brown;
+  background: var( --color-main );
 }
-input {
-  background: transparent;
-  border: none;
-}
-input:focus {
-  outline: none;
-}
-
 .lobby label {
   position: absolute;
   left: 50%;
@@ -22,6 +20,6 @@ input:focus {
     display: block;
   }
   .lobby label input {
-    background: #00000044;
+    background: var( --color-bgr-dark );
     padding: 5px;
   }

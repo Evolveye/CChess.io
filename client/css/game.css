@@ -1,32 +1,43 @@
+.game .user_data {
+  display: flex;
+  align-items: center;
+}
+  .game .user_data > *:not( :last-child ) {
+    margin-right: 5px;
+  }
+  .game .user_data-nickname {
+    font-weight: bold;
+    color: #999;
+  }
+  .game .user_data-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
 .game > * {
   position: absolute;
-  color: #FFFFFFBB;
+  color: #fffb;
   user-select: none;
 }
-
 .game .chat {
   left: 10px;
   top: 10px;
 }
   .game .chat.active {
-    background: #00000044;
+    background: var( --color-bgr-dark );
   }
   .game .chat-message {
     margin: 0;
     padding: 5px;
-    background-color: #00000044;
-    color: #ffffff;
+    background-color: var( --color-bgr-dark );
+    color: #fff;
   }
-    .game .chat-message.is-user_info {
-      background-color: #ff000044;
-    }
+    .game .chat-message.is-user_info,
     .game .chat-message.is-server {
-      background-color: #0011ff44;
+      background-color: var( --color-info-neutral );
     }
-    .game .chat-message-nickname {
-      color: #999;
-    }
-    .game .chat-message-nickname::after {
+    .game .chat-message:not( .is-user_info ) .user_data-nickname::after {
       content: ": "
     }
   .game .chat-input {
@@ -34,27 +45,26 @@
     color: inherit;
     padding: 5px;
   }
-
 .game .canvas-main {
   width: 100vw;
   height: 100vh;
   background-color: #666
 }
-
-.game .server_connection {
+.game .scoreboard,
+.game .version,
+.game .console {
   background-color: #333;
+  padding: 5px;
+}
+.game .scoreboard {
   right: 10px;
   top: 10px;
 }
-
 .game .version {
-  background-color: #333;
   right: 10px;
-  bottom: 10px
+  bottom: 10px;
 }
-
 .game .console {
-  background-color: #333;
   left: 10px;
-  bottom: 10px
+  bottom: 10px;
 }
