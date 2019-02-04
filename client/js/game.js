@@ -51,41 +51,17 @@ export default class Game {
     ws.on( `pong`, () => this.console.textContent = `Ping: ${Date.now() - this.ping}ms` )
     ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
-      this.console.textContent = `Ping: ${Date.now() - this.ping}ms`
-
       const { width, height, tileSize, fields } = chessboard
-      const c = this.camera
 
       this.chessmanSize = chessmanSize
+      this.console.textContent = `Ping: ${Date.now() - this.ping}ms`
       this.chessboard = new Chessboard( width, height, tileSize, fields, true )
-
       this.player = this.chessboard.get( player.x, player.y )
 
-      player = this.player
       chessboard = this.chessboard
+      player = this.player
 
-
-      if ( window.innerWidth < width * tileSize ) {
-        c.x = window.innerWidth / 2 - (player.x + .5) * tileSize
-
-        if ( c.x > c.spaceAroundgame )
-          c.x = c.spaceAroundgame
-        else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
-          c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
-      }
-      else
-        c.x = window.innerWidth / 2 - width * tileSize / 2
-
-      if ( window.innerHeight < height * tileSize ) {
-        c.y = window.innerHeight / 2 - (player.y + .5) * tileSize
-
-        if ( c.y > c.spaceAroundgame )
-          c.y = c.spaceAroundgame
-        else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
-          c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
-      }
-      else
-        c.y =  window.innerHeight / 2 - height * tileSize / 2
+      this.cameraInit()
 
       setInterval( () => {
         this.logic()
@@ -114,21 +90,22 @@ export default class Game {
 
       window.addEventListener(   `resize`,     () => this.resize() )
       document.addEventListener( `keypress`,   () => {
-        if ( !Game.key( `enter`) )
-          return
+        if ( Game.key( `enter`) ) {
+          const c = this.chat
 
-        const c = this.chat
-
-        if ( this.mode == `chat` ) {
-          this.mode = `game`
-          c.box.classList.remove( `active` )
-          c.input.blur()
+          if ( this.mode == `chat` ) {
+            this.mode = `game`
+            c.box.classList.remove( `active` )
+            c.input.blur()
+          }
+          else if ( this.mode == `game` ) {
+            this.mode = `chat`
+            c.box.classList.add( `active` )
+            c.input.focus()
+          }
         }
-        else if ( this.mode == `game` ) {
-          this.mode = `chat`
-          c.box.classList.add( `active` )
-          c.input.focus()
-        }
+        else if ( Game.key( `space`) )
+          this.cameraInit()
       } )
       ws.on( `game-update-scoreboard`, scoreboard => {
         this.scoreboard.innerHTML = ``
@@ -143,6 +120,32 @@ export default class Game {
         chessboard.move( from, to ).id === player.id  ?  this.end()  :  null
       ) )
     } )
+  }
+  cameraInit() {
+    const { width, height, tileSize } = this.chessboard
+    const c = this.camera
+
+    if ( window.innerWidth < width * tileSize ) {
+      c.x = window.innerWidth / 2 - (this.player.x + .5) * tileSize
+
+      if ( c.x > c.spaceAroundgame )
+        c.x = c.spaceAroundgame
+      else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
+        c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
+    }
+    else
+      c.x = window.innerWidth / 2 - width * tileSize / 2
+
+    if ( window.innerHeight < height * tileSize ) {
+      c.y = window.innerHeight / 2 - (this.player.y + .5) * tileSize
+
+      if ( c.y > c.spaceAroundgame )
+        c.y = c.spaceAroundgame
+      else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
+        c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
+    }
+    else
+      c.y =  window.innerHeight / 2 - height * tileSize / 2
   }
   cursorUp() {
     const c = this.camera
@@ -358,6 +361,7 @@ export default class Game {
         case `wsad`: return k[ 87 ]  ||  k[ 83 ]  ||  k[ 65 ]  ||  k[ 68 ]
 
         case `enter`: return k[ 13 ]
+        case `space`: return k[ 32 ]
       }
 
     key = k[ key ]
