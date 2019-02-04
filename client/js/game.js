@@ -171,7 +171,7 @@ export default class Game {
     const from = { x:field.x, y:field.y }
     const to = { x, y }
 
-    if ( !field || !cb.isAbove( x, y ) )
+    if ( !field || !cb.isAbove( x, y ) || this.mode == `disconnected` )
       c.action = null
 
     if ( c.action == `jump` ) {
