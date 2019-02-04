@@ -32,7 +32,6 @@ export default class Game {
 
     this.ws = ws
     this.ping = Date.now()
-    this.pingCounter = 0
     this.mode = `game`
     this.map = null
     this.chessmanSize = null
@@ -67,14 +66,7 @@ export default class Game {
         this.logic()
         requestAnimationFrame( () => this.draw() )
       }, 1000 / 60 )
-      setInterval( () => {
-        if ( !this.pingCounter )
-          return
-
-        this.ping = Date.now()
-        --this.pingCounter
-        ws.send( `ping` )
-      }, 1000 * 15 )
+      setInterval( () => ws.send( `ping` ), 1000 * 15 )
       requestAnimationFrame( () => this.draw() )
 
       if ( this.runningOnMobile ) {
@@ -121,6 +113,7 @@ export default class Game {
       ) )
     } )
   }
+
   cameraInit() {
     const { width, height, tileSize } = this.chessboard
     const c = this.camera
@@ -147,6 +140,7 @@ export default class Game {
     else
       c.y =  window.innerHeight / 2 - height * tileSize / 2
   }
+
   cursorUp() {
     const c = this.camera
     const cb = this.chessboard
@@ -326,7 +320,6 @@ export default class Game {
   }
 
   send( type, data ) {
-    this.pingCounter = 15
     this.ws.send( type, data )
   }
 
