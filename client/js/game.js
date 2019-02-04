@@ -108,7 +108,7 @@ export default class Game {
             c.input.focus()
           }
         }
-        else if ( Game.key( `space`) )
+        else if ( Game.key( `space`) && this.mode != `chat` )
           this.cameraInit()
       } )
       ws.on( `game-update-scoreboard`, scoreboard => {

@@ -4,7 +4,7 @@ export default class GameController {
   constructor( wssController ) {
     this.wssController = wssController
     this.players = new Map
-    this.chessboard = new Chessboard( 50, 50, 60 )
+    this.chessboard = new Chessboard( 70, 70, 60 )
     this.jumps = []
     this.piecesPoints = {
       pawn: 5,
@@ -55,11 +55,11 @@ export default class GameController {
     const cb = this.chessboard
     const { width, height } = cb
     const chessPieces = {
-      pawn: 100,
-      rook: 15,
-      knight: 35,
-      bishop: 15,
-      queen: 10
+      pawn: 300,
+      rook: 50,
+      knight: 100,
+      bishop: 50,
+      queen: 20
     }
 
     for ( let y = 0;  y < height;  y++ )
