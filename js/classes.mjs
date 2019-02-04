@@ -483,7 +483,7 @@ export default class Chessboard {
   }
 
   checkJump( from, to ) {
-    const chessman = this.get( from.x, from.y ) || {}
+    const chessman = this.get( from.x, from.y )
     const nextField = this.get( to.x, to.y )
 
     if ( !chessman || !chessman.goodTimestamp() || !chessman.checkJump( to, this ) || nextField === undefined )

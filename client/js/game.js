@@ -133,9 +133,7 @@ export default class Game {
       ws.on( `game-update-scoreboard`, scoreboard => {
         this.scoreboard.innerHTML = ``
 
-        scoreboard.sort( (a, b) => a.scores > b.scores )
-
-        for ( const field of scoreboard )
+        for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) )
           this.scoreboard.appendChild( userData( field ) )
       } )
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )

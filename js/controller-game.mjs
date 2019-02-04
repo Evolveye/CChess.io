@@ -100,6 +100,7 @@ export default class GameController {
     player.scores = 0
 
     playerController.broadcast( `game-update-spawn`, player )
+    playerController.send( `game-update-scoreboard`, this.scoreboard() )
 
     this.players.set( playerController.id, Object.assign( playerController, player ) )
 
