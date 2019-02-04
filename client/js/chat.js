@@ -8,7 +8,7 @@ export default class Chat {
    * @param {Number} msgMaxLen Max length of message
    * @param {Number} msgLifeTime Seconds of message existing
    */
-  constructor( chatbox, msgMaxLen=127, msgLifeTime=10 ) {
+  constructor( chatbox, msgMaxLen=127, msgLifeTime=20 ) {
     this.box = chatbox
     chatbox.innerHTML = /* html */ `
       <div class="chat-messages"></div>
