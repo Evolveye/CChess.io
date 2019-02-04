@@ -554,7 +554,7 @@ export default class Chessboard {
     chessman.y = to.y
     chessman.lastJump = Date.now()
 
-    return (nextField || {}).id || true
+    return nextField || true
   }
 
   isABeatableField( x, y, entity ) {

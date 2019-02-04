@@ -1,6 +1,7 @@
 import ws from "./ws.js"
 import Chessboard, { Color, setTexture } from "/$/classes"
 import Chat from "./chat.js"
+import userData from "./userData.js"
 
 export default class Game {
   constructor( nickname ) {
@@ -9,7 +10,8 @@ export default class Game {
       <canvas class="canvas-main"></canvas>
 
       <section class="scoreboard">
-        <h2>Scoreboard</h2>
+        <h3>Scoreboard</h3>
+        <div class="scoreboard-fields"></div>
       </section>
 
       <section class="chat"></section>
@@ -25,6 +27,8 @@ export default class Game {
 
     this.chat = new Chat( this.box.querySelector( `.chat` ) )
     this.console = this.box.querySelector( `.console` )
+
+    this.scoreboard = this.box.querySelector( `.scoreboard-fields` )
 
     this.ws = ws
     this.ping = Date.now()
@@ -126,11 +130,19 @@ export default class Game {
           c.input.focus()
         }
       } )
-      ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
+      ws.on( `game-update-scoreboard`, scoreboard => {
+        this.scoreboard.innerHTML = ``
+
+        scoreboard.sort( (a, b) => a.scores > b.scores )
+
+        for ( const field of scoreboard )
+          this.scoreboard.appendChild( userData( field ) )
+      } )
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
+      ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
       ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) =>
-        chessboard.move( from, to ) === player.id  ?  this.end()  :  null
+        chessboard.move( from, to ).id === player.id  ?  this.end()  :  null
       ) )
     } )
   }

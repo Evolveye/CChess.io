@@ -1,11 +1,11 @@
 /** @return {HTMLElement} */
-export default function userData( element=document.createElement( `div` ), { content, sender, color } ) {
+export default function userData({ data, nickname, color }, element=document.createElement( `div` ) ) {
   element.classList.add( `user_data` )
 
-  if ( sender ) {
-    const nickname = document.createElement( `span` )
-    nickname.className = `user_data-nickname`
-    nickname.textContent = sender
+  if ( nickname ) {
+    const nick = document.createElement( `span` )
+    nick.className = `user_data-nickname`
+    nick.textContent = nickname
 
     if ( color ) {
       const playerColor = document.createElement( `span` )
@@ -14,12 +14,12 @@ export default function userData( element=document.createElement( `div` ), { con
 
       element.appendChild( playerColor )
     }
-    element.appendChild( nickname )
+    element.appendChild( nick )
   }
 
   const msg = document.createElement( `span` )
   msg.className = `user_data-data`
-  msg.textContent = content
+  msg.textContent = data
 
   element.appendChild( msg )
 

@@ -22,7 +22,7 @@ export default class PlayerController {
   eventHandler( type, data ) {
     switch ( type ) {
       case `chat-new_message`:
-        data.sender = this.nickname
+        data.nickname = this.nickname
         data.color = this.color
         this.game.broadcast( `chat-new_message`, data )
         break
@@ -40,13 +40,13 @@ export default class PlayerController {
         this.game.spawnPlayer( this, data, data => {
           this.color = data.player.color.txtFormat
           this.send( `chat-new_message`, {
-            content: `Press enter to chat`,
+            data: `Press enter to chat`,
             type: `user_info`
           } )
           this.game.broadcast( `chat-new_message`, {
             color: this.color,
-            sender: this.nickname,
-            content: `joined the game 🌵`,
+            nickname: this.nickname,
+            data: `joined the game 🌵`,
             type: `user_info`
           } )
           this.send( `game-init`, data )
@@ -60,7 +60,7 @@ export default class PlayerController {
       case `close`:
         this.game.destroyPlayer( this.id )
         this.game.broadcast( `chat-new_message`, {
-          content: `${this.nickname} left the game 👺`,
+          data: `${this.nickname} left the game 👺`,
           type: `user_info`
         } )
         break

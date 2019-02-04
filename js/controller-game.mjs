@@ -6,9 +6,18 @@ export default class GameController {
     this.players = new Map
     this.chessboard = new Chessboard( 50, 50, 60 )
     this.jumps = []
+    this.piecesPoints = {
+      pawn: 5,
+      rook: 20,
+      knight: 10,
+      bishop: 15,
+      queen: 25,
+      king: 50
+    }
 
     this.chessboardFiller()
     setInterval( () => this.chessboardFiller(), 1000 * 30 )
+    setInterval( () => this.broadcast( `game-update-scoreboard`, this.scoreboard() ), 1000 * 2 )
     setInterval( () => {
       if ( !this.jumps.length )
         return
@@ -16,6 +25,19 @@ export default class GameController {
       wssController.broadcast( `game-update-jumps`, this.jumps )
       this.jumps = []
     }, 1000 / 60 )
+  }
+
+  scoreboard() {
+    const scoreboard = []
+
+    for ( const player of this.players.values() )
+      scoreboard.push( {
+        nickname: player.nickname,
+        color: player.color,
+        data: player.scores
+      } )
+
+    return scoreboard
   }
 
   testNickname( nickname ) {
@@ -75,6 +97,7 @@ export default class GameController {
     const player = this.spawn( `player`, color )
     player.id = playerController.id
     player.nickname = nickname
+    player.scores = 0
 
     playerController.broadcast( `game-update-spawn`, player )
 
@@ -103,8 +126,13 @@ export default class GameController {
   }
 
   playerUpdate( id, { from, to } ) {
-    if ( this.chessboard.move( from, to ) )
-      this.jumps.push( { from, to } )
+    const takedField = this.chessboard.move( from, to )
+
+    if ( !takedField )
+      return
+
+    this.players.get( id ).scores += this.piecesPoints[ takedField.type ] || 0
+    this.jumps.push( { from, to } )
   }
 
   broadcast( type, data ) {

@@ -25,7 +25,7 @@ export default class Chat {
       if ( e.key === `Enter` && i.value) {
         ws.send( `chat-new_message`, {
           type: `standard`,
-          content: i.value
+          data: i.value
         } )
 
         i.value = ``
@@ -33,7 +33,7 @@ export default class Chat {
     }
 
     const newMessage = userData => {
-      const message = userDataConstructor( document.createElement( `div` ), userData )
+      const message = userDataConstructor( userData )
       message.classList.add( `chat-message` )
 
       if ( userData.type )
@@ -46,12 +46,12 @@ export default class Chat {
 
     ws.on( `chat-new_message`, newMessage )
     ws.onclose( () => newMessage( {
-      content: `Disconnected 👺`,
+      data: `Disconnected 👺`,
       type: `server`
     } ) )
   }
 
-  send( type, content ) {
-    ws.send( `chat-new_message`, { type, content } )
+  send( type, data ) {
+    ws.send( `chat-new_message`, { type, data } )
   }
 }
