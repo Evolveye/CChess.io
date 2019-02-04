@@ -188,7 +188,8 @@ export default class Game {
       if ( (field.x != x || field.y != y) && cb.checkJump( from, to ) )
         this.send( `game-update-player`, { from, to } )
 
-      c.action = null
+      if ( !Game.key( `ctrl` ) )
+        c.action = null
     }
     else
       c.action = null
@@ -368,7 +369,7 @@ export default class Game {
     alert( `game over\n\nZdobyte punkty: ${this.player.scores}\n\nOdśwież stronę aby grać dalej` )
   }
 
-  static key( key, newBool=null ) {
+  static key( key ) {
     const k = Game.keys
 
     if ( typeof key === `string`)
@@ -387,6 +388,7 @@ export default class Game {
 
         case `enter`: return k[ 13 ]
         case `space`: return k[ 32 ]
+        case `ctrl`: return k[ 17 ]
       }
 
     key = k[ key ]
