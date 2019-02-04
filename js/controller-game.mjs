@@ -136,11 +136,11 @@ export default class GameController {
     if ( !takedField )
       return
 
-    if ( takedField.id && this.players.has( takedField.id ) )
-      this.players.delete( takedField.id )
-
     this.players.get( id ).scores += this.piecesPoints[ takedField.type ] || 0
     this.jumps.push( { from, to } )
+
+    if ( takedField.id && this.players.has( takedField.id ) )
+      this.players.delete( takedField.id )
   }
 
   broadcast( type, data ) {
