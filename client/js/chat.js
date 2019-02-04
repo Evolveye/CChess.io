@@ -54,7 +54,7 @@ export default class Chat {
 
       this.messagesList.insertAdjacentElement( `beforeend`, message )
 
-      //setTimeout( () => message.remove(), 1000 * msgLifeTime )
+      setTimeout( () => message.remove(), 1000 * msgLifeTime )
     }
 
     ws.on( `chat-new_message`, newMessage )
