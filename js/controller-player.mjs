@@ -3,6 +3,7 @@ export default class PlayerController {
     this.gameController = gameController
     this.wss = wss
     this.ws = ws
+    this.nickname = ``
 
     this.id = Math.random()
   }
@@ -21,16 +22,23 @@ export default class PlayerController {
   eventHandler( type, data ) {
     switch ( type ) {
       case `chat-new_message`:
-        this.broadcast( `chat-new_message`, data )
-        this.send( `chat-new_message`, data )
+        data.sender = this.nickname
+        this.gameController.wssController.broadcast( `chat-new_message`, data )
         break
 
       case `game-nickname`:
+        this.nickname = data
         this.send( `game-nickname`, this.gameController.testNickname( data ) )
         break
 
       case `game-init`:
-        this.gameController.spawnPlayer( this, data, data => this.send( `game-init`, data ) )
+        this.gameController.spawnPlayer( this, data, data => {
+          this.gameController.wssController.broadcast( `chat-new_message`, {
+            content: `${this.nickname} joined the game 🌵`,
+            type: `new_user`
+          } )
+          this.send( `game-init`, data )
+        } )
         break
 
       case `game-update-player`:

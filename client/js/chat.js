@@ -24,20 +24,41 @@ export default class Chat {
 
     i.onkeydown = e => {
       if ( e.key === `Enter` && i.value) {
-        ws.send( `chat-new_message`, i.value )
+        ws.send( `chat-new_message`, {
+          type: `standard`,
+          content: i.value
+        } )
+
         i.value = ``
       }
     }
 
-    ws.send( `chat-new_message`, `Hello 🌵` )
-    ws.on( `chat-new_message`, msg => {
+    ws.on( `chat-new_message`, ( { type, content, sender } ) => {
       const message = document.createElement( `p` )
       message.className = `chat-message`
-      message.textContent = msg
+
+      if ( sender ) {
+        const nickname = document.createElement( `span` )
+        nickname.className = `chat-message-nickname`
+        nickname.textContent = sender
+        message.appendChild( nickname )
+      }
+
+      const msg = document.createElement( `span` )
+      msg.className = `chat-message-content`
+      msg.textContent = content
+      message.appendChild( msg )
+
+      if ( type )
+        message.className += ` is-${type}`
 
       this.messagesList.insertAdjacentElement( `beforeend`, message )
 
-      setTimeout( () => message.remove(), 1000 * msgLifeTime )
+      //setTimeout( () => message.remove(), 1000 * msgLifeTime )
     } )
+  }
+
+  send( type, content ) {
+    ws.send( `chat-new_message`, { type, content } )
   }
 }

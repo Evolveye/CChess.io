@@ -8,7 +8,7 @@ export default class Game {
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
 
-      <section class="version">Approximate v: inDev_2.12.0</section>
+      <section class="version">Approximate v: inDev_2.13.0</section>
 
       <section class="chat"></section>
 
