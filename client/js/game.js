@@ -23,7 +23,7 @@ export default class Game {
     this.console = this.box.querySelector( `.console` )
 
     this.ws = ws
-    this.ping = 0
+    this.ping = Date.now()
     this.pingCounter = 0
     this.mode = `game`
     this.map = null
