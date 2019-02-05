@@ -433,10 +433,15 @@ export default class Chessboard {
     /** @type {Chessman[][]} */
     this.fields = [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => ({ color:null, entity:null }) ) )
 
-    for ( const row of fields )
-      for ( const field of row )
+    for ( let y = 0;  y < height;  y++ )
+      for ( let x = 0;  x < width;  x++ ) {
+        const field = (fields[ y ] || [])[ x ] || {}
+
+        if ( field.color )
+          this.setColor( x, y, field.color )
         if ( field.entity )
           this.setEntity( field.entity, isTextured )
+      }
   }
 
   get( x, y ) {
@@ -481,14 +486,12 @@ export default class Chessboard {
 
       if ( isTextured )
         setTexture`../img/${entity}.png`
-      if ( `nickname` in entityData )
-        entity.nickname = entityData.nickname
-      if ( `scores` in entityData )
-        entity.scores = entityData.scores
-      if ( `id` in entityData ) {
+      if ( `id` in entityData )
         entity.id = entityData.id
-        this.setColor( x, y, color )
-      }
+
+      for ( const property of Object.keys( entityData ) )
+        if ( !(property in entity) )
+          entity[ property ] = entityData[ property ]
     }
 
     this.fields[ y ][ x ].entity = entity

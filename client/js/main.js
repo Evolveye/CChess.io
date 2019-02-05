@@ -19,7 +19,7 @@ nicknameInput.onkeydown = e => {
 ws.on( `game-nickname`, good => {
   if ( good ) {
     document.querySelector( `.lobby` ).hidden = true
-    new Game( nicknameInput.value )
+    window.game = new Game( nicknameInput.value )
     document.cookie = `nickname=${nicknameInput.value}`
   }
   else

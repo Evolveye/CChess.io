@@ -16,7 +16,10 @@ export default class Game {
 
       <section class="chat"></section>
 
-      <div class="console"></div>
+      <div class="stats">
+        <div class="stats-fieldsToCapture"></div>
+        <div class="stats-ping"></div>
+      </div>
 
       <div class="version">Approximate v: Alpha 1.0</div>
     `
@@ -26,7 +29,10 @@ export default class Game {
     this.ctx = this.canvas.getContext( `2d` )
 
     this.chat = new Chat( this.box.querySelector( `.chat` ) )
-    this.console = this.box.querySelector( `.console` )
+    this.stats = {
+      fieldsToCapture: this.box.querySelector( `.stats-fieldsToCapture` ),
+      ping: this.box.querySelector( `.stats-ping` )
+    }
 
     this.scoreboard = this.box.querySelector( `.scoreboard-fields` )
 
@@ -54,18 +60,19 @@ export default class Game {
         type: `disconnected`
       } )
     } )
-    ws.on( `pong`, () => this.console.textContent = `Ping: ${Date.now() - this.ping}ms` )
+    ws.on( `pong`, () => this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
     ws.send( `game-init`, nickname )
     ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
       const { width, height, tileSize, fields } = chessboard
 
       this.chessmanSize = chessmanSize
-      this.console.textContent = `Ping: ${Date.now() - this.ping}ms`
+      this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms`
       this.chessboard = new Chessboard( width, height, tileSize, fields, true )
       this.player = this.chessboard.get( player.x, player.y ).entity
 
       chessboard = this.chessboard
       player = this.player
+
 
       this.cameraInit()
 
@@ -123,15 +130,22 @@ export default class Game {
 
           this.scoreboard.appendChild( userData( field ) )
         }
+
+        this.stats.fieldsToCapture.textContent = player.fieldsToCapture
       } )
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
       ws.on( `game-update-spawn`, chessman => chessboard.setEntity( chessman, true ) )
       ws.on( `game-update`, ( { jumps, colors } ) => {
         colors.forEach( ( { x, y, color } ) => this.chessboard.setColor( x, y, color ) )
-        jumps.forEach( ( { from, to } ) =>
-          chessboard.move( from, to ).id === player.id  ?  this.end()  :  null
-        )
+        jumps.forEach( ( { from, to } ) => {
+          const takedField = chessboard.move( from, to )
+
+          if ( takedField.id === player.id )
+            this.end()
+          else if ( takedField.type == `pawn` )
+            ++player.fieldsToCapture
+        } )
       } )
     } )
   }
@@ -165,9 +179,18 @@ export default class Game {
 
   setColor() {
     const { x, y } = this.lastClickedEntity
+    const player = this.player
 
-    this.chessboard.setColor( x, y, this.player.color )
-    this.ws.send( `game-update-color`, { coords:{ x, y }, color:this.player.color } )
+    if ( player.fieldsToCapture <= 0 )
+      return
+
+    let prevColor = this.chessboard.setColor( x, y, player.color )
+
+    if ( prevColor === undefined )
+      return
+
+    --player.fieldsToCapture
+    this.ws.send( `game-update-color`, { coords:{ x, y }, color:player.color } )
   }
 
   cursorUp() {

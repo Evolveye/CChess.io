@@ -25,7 +25,7 @@ export default class GameController {
 
     this.chessboardFiller()
     setInterval( () => this.chessboardFiller(), 1000 * 30 )
-    setInterval( () => this.broadcast( `game-update-scoreboard`, this.scoreboard() ), 1000 * 2 )
+    setInterval( () => this.broadcast( `game-update-scoreboard`, this.scoreboard() ), 1000 )
     setInterval( () => {
       if ( !this.jumps.length && !this.newColors.length )
         return
@@ -103,11 +103,13 @@ export default class GameController {
     player.id = playerController.id
     player.nickname = nickname
     player.scores = 0
+    player.fieldsToCapture = 0
 
     playerController.broadcast( `game-update-spawn`, player )
     playerController.send( `game-update-scoreboard`, this.scoreboard() )
 
     this.players.set( playerController.id, Object.assign( playerController, player ) )
+    // this.setColor( player.id, { coords:{ x:player.x, y:player.y }, color } )
 
     let chessmanSize = this.chessboard.tileSize * .9
 
@@ -124,16 +126,17 @@ export default class GameController {
     const { x, y } = coords
     const player = this.players.get( id )
 
-    if ( !Color.isEqual( player.color, this.chessboard.get( x, y ).entity ) )
+    if ( player.fieldsToCapture <= 0 )
       return
 
-    let prevColor = this.chessboard.setColor( x, y, color )
+    const prevColor = this.chessboard.setColor( x, y, color )
 
     if ( prevColor )
       player.scores += 15
     else if ( prevColor === null )
       player.scores += 10
 
+    --player.fieldsToCapture
     this.newColors.push( { x, y, color } )
   }
 
@@ -167,8 +170,11 @@ export default class GameController {
 
     this.jumps.push( { from, to } )
 
+    if ( takedField.type == `pawn` )
+      ++player.fieldsToCapture
+
     if ( takedField.id && this.players.has( takedField.id ) ) {
-      player.scores.scores += this.players.get( takedField.id ).scores ** 1.8 ** .5
+      player.scores += this.players.get( takedField.id ).scores ** 1.8 ** .5
       this.players.delete( takedField.id )
     }
   }
