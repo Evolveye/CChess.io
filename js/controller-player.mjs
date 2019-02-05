@@ -22,6 +22,8 @@ export default class PlayerController {
   eventHandler( type, data ) {
     switch ( type ) {
       case `chat-new_message`:
+        if ( data.length > 127 )
+          break
         data.nickname = this.nickname
         data.color = this.color
         this.game.broadcast( `chat-new_message`, data )
