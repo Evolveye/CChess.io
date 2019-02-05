@@ -121,11 +121,16 @@ export default class GameController {
       return
 
     const { x, y } = coords
+    const player = this.players.get( id )
 
-    if ( !Color.isEqual( this.players.get( id ).color, this.chessboard.get( x, y ).entity ) )
+    if ( !Color.isEqual( player.color, this.chessboard.get( x, y ).entity ) )
       return
 
-    this.chessboard.setColor( x, y, color )
+    if ( this.chessboard.setColor( x, y, color ) )
+      player.scores += 15
+    else
+      player.scores += 10
+
     this.newColors.push( { x, y, color } )
   }
 
@@ -150,15 +155,19 @@ export default class GameController {
       return
 
     const takedField = this.chessboard.move( from, to )
+    const player = this.players.get( id )
 
     if ( !takedField )
       return
 
-    this.players.get( id ).scores += this.piecesPoints[ takedField.type ] || 0
+    player.scores += this.piecesPoints[ takedField.type ] || 0
+
     this.jumps.push( { from, to } )
 
-    if ( takedField.id && this.players.has( takedField.id ) )
+    if ( takedField.id && this.players.has( takedField.id ) ) {
+      player.scores.scores += this.players.get( takedField.id ).scores ** 1.8 ** .5
       this.players.delete( takedField.id )
+    }
   }
 
   broadcast( type, data ) {

@@ -449,7 +449,11 @@ export default class Chessboard {
     if ( !field )
       return
 
+    const prevColor = field.color
+
     field.color = Color.getTxtFormat( color )
+
+    return prevColor
   }
 
   setEntity( entityData, isTextured ) {
