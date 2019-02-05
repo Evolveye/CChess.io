@@ -76,7 +76,7 @@ export default class Game {
       setInterval( () => {
         this.ping = Date.now()
         ws.send( `ping` )
-      }, 1000 * 15 )
+      }, 1000 * 5 )
       requestAnimationFrame( () => this.draw() )
 
       if ( this.runningOnMobile ) {
@@ -88,13 +88,13 @@ export default class Game {
         this.chat.box.classList.add( `active` )
       }
       else {
-        document.addEventListener( `mouseup`,    () => this.cursorUp() )
-        document.addEventListener( `mousedown`,  () => this.cursorDown() )
-        document.addEventListener( `mousemove`,  e  => this.cursorMove( e ) )
+        document.addEventListener( `mouseup`,   () => this.cursorUp() )
+        document.addEventListener( `mousedown`, () => this.cursorDown() )
+        document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
       }
 
-      window.addEventListener(   `resize`,     () => this.resize() )
-      document.addEventListener( `keypress`,   () => {
+      window.addEventListener(   `resize`,   () => this.resize() )
+      document.addEventListener( `keypress`, () => {
         if ( Game.key( `enter`) ) {
           const c = this.chat
 
@@ -267,25 +267,22 @@ export default class Game {
   }
 
   draw() {
-    const cb = this.chessboard
+    const { width, height, tileSize } = this.chessboard
+    const cSize = this.chessmanSize
     const c = this.camera
     const ctx = this.ctx
-    const tSize = cb.tileSize
-    const cSize = this.chessmanSize
 
-    ctx.fillStyle = `#843737`
+    ctx.fillStyle = `#000`
     ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
 
+    ctx.fillStyle = `#fff`
+    ctx.fillRect( c.x, c.y, width * tileSize, height * tileSize )
 
-    ctx.strokeStyle = `white`
-    ctx.lineWidth = 1
-
-    ctx.fillStyle = `#333`
-
-    for ( let y = 0;  y < cb.height;  y++ )
-      for ( let x = 0;  x < cb.width;  x++ )
+    ctx.fillStyle = `#dadada`
+    for ( let y = 0;  y < height;  y++ )
+      for ( let x = 0;  x < width;  x++ )
         if ( (y + x) % 2 )
-          ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+          ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
 
     if ( /^jump/.test( c.action ) ) {
       const entity = this.lastClickedField
@@ -293,22 +290,22 @@ export default class Game {
       ctx.fillStyle = `${entity.color}44`
 
       for ( const { x, y } of entity.availableFields( cb ) )
-        ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+        ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
     }
 
-    for ( let y = 0;  y < cb.height;  y++ )
-      for ( let x = 0;  x < cb.width;  x++ ) {
-        const entity = cb.get( x, y )
+    for ( let y = 0;  y < height;  y++ )
+      for ( let x = 0;  x < width;  x++ ) {
+        const entity = this.chessboard.get( x, y )
 
         if ( !entity )
           continue
 
-        let eX = c.x + (x + .5) * tSize
-        let eY = c.y + (y + .5) * tSize
+        let eX = c.x + (x + .5) * tileSize
+        let eY = c.y + (y + .5) * tileSize
 
         if ( entity.protected() ) {
           ctx.fillStyle = `#0000ff44`
-          ctx.fillRect( c.x + x * tSize, c.y + y * tSize, tSize, tSize )
+          ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
         }
 
         ctx.drawImage( entity.tex, eX - cSize / 2, eY - cSize / 2, cSize, cSize )
@@ -323,16 +320,6 @@ export default class Game {
           ctx.fillText( nickname, eX - width / 2, eY - cSize / 2 )
         }
       }
-
-    // ctx.fillStyle = document.querySelector( `html` ).style.background || `#a74b36`
-    // ctx.fillRect( c.x + (this.player.x + 2) * tSize, c.y + (this.player.y - 2) * tSize, 25*tSize, 25*tSize )
-
-    // ctx.fillStyle = document.querySelector( `html` ).style.color || `#542617`
-    // for ( let i = 25; i; i-- )
-    //   for ( let j = 25; j; j-- ) {
-    //     if ( (i + j) % 2 )
-    //       ctx.fillRect( c.x + (this.player.x + 2 + j) * tSize, c.y + (this.player.y - 2 + i) * tSize, tSize, tSize )
-    //   }
   }
 
   cameraCursorUpdate( x, y ) {
@@ -357,12 +344,18 @@ export default class Game {
   }
 
   resize() {
-    this.canvas.width = window.innerWidth
-    this.canvas.height = window.innerHeight
+    const ctx = this.ctx
 
-    this.ctx.imageSmoothingEnabled = false
+    ctx.canvas.width = window.innerWidth
+    ctx.canvas.height = window.innerHeight
 
-    this.ctx.font = `15px monospace`
+    ctx.imageSmoothingEnabled = false
+    ctx.font = `15px monospace`
+    ctx.strokeStyle = `white`
+    ctx.lineWidth = 1
+
+    ctx.fillStyle = `#843737`
+    ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
   }
 
   end() {
