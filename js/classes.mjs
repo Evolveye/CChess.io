@@ -446,7 +446,7 @@ export default class Chessboard {
   setColor( x, y, color ) {
     const field = this.get( x, y )
 
-    if ( field || !entity )
+    if ( !field )
       return
 
     field.color = Color.getTxtFormat( color )

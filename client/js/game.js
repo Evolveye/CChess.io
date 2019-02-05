@@ -278,11 +278,19 @@ export default class Game {
     ctx.fillStyle = `#fff`
     ctx.fillRect( c.x, c.y, width * tileSize, height * tileSize )
 
-    ctx.fillStyle = `#0001`
     for ( let y = 0;  y < height;  y++ )
-      for ( let x = 0;  x < width;  x++ )
-        if ( (y + x) % 2 )
+      for ( let x = 0;  x < width;  x++ ) {
+        const field = this.chessboard.get( x, y )
+
+        if ( field.color ) {
+          ctx.fillStyle = field.color
           ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
+        }
+        if ( (y + x) % 2 ) {
+          ctx.fillStyle = `#0001`
+          ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
+        }
+      }
 
     if ( /^jump/.test( c.action ) ) {
       const entity = this.lastClickedEntity
