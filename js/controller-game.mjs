@@ -126,9 +126,11 @@ export default class GameController {
     if ( !Color.isEqual( player.color, this.chessboard.get( x, y ).entity ) )
       return
 
-    if ( this.chessboard.setColor( x, y, color ) )
+    let prevColor = this.chessboard.setColor( x, y, color )
+
+    if ( prevColor )
       player.scores += 15
-    else
+    else if ( prevColor === null )
       player.scores += 10
 
     this.newColors.push( { x, y, color } )

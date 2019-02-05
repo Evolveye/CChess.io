@@ -446,7 +446,7 @@ export default class Chessboard {
   setColor( x, y, color ) {
     const field = this.get( x, y )
 
-    if ( !field )
+    if ( !field || Color.isEqual( field.color, color ) )
       return
 
     const prevColor = field.color
