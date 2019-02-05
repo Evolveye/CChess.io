@@ -6,6 +6,7 @@ export default class PlayerController {
     this.nickname = ``
     this.id = Math.random()
     this.color = null
+    this.lastMessagesTimes = []
   }
 
   send( type, data ) {
@@ -22,10 +23,27 @@ export default class PlayerController {
   eventHandler( type, data ) {
     switch ( type ) {
       case `chat-new_message`:
-        if ( data.length > 127 )
+        if ( data.length > 127 ) {
+          this.send( `chat-new_message`, {
+            type: `user_info`,
+            data: `Too long message!`
+          } )
           break
+        }
+        if ( this.lastMessagesTimes.length == 3 ) {
+          if ( this.lastMessagesTimes[ 0 ] + 1000 * 5 > Date.now() ) {
+            this.send( `chat-new_message`, {
+              type: `user_info`,
+              data: `You want to send messages too fast!`
+            } )
+            break
+          }
+
+          this.lastMessagesTimes.shift()
+        }
         data.nickname = this.nickname
         data.color = this.color
+        this.lastMessagesTimes.push( Date.now() )
         this.game.broadcast( `chat-new_message`, data )
         break
 
