@@ -446,7 +446,6 @@ export default class Chessboard {
   setColor( x, y, color ) {
     const field = this.get( x, y )
 
-    console.log( field )
     if ( !field )
       return
 
@@ -526,8 +525,11 @@ export default class Chessboard {
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
-        const entity = this.get( x, y ).entity
+        const field = this.get( x, y )
+        const entity = field.entity
 
+        if ( Color.isEqual( field.color, color ) )
+          this.setColor( x, y, `#ffffff` )
         if ( Color.isEqual( entity, color ) ) {
           if ( `id` in entity ) {
             this.remove( x, y )

@@ -6,6 +6,7 @@ export default class GameController {
     this.players = new Map
     this.chessboard = new Chessboard( 70, 70, 60 )
     this.jumps = []
+    this.newColors = []
     this.piecesPoints = {
       pawn: 5,
       rook: 20,
@@ -19,11 +20,12 @@ export default class GameController {
     setInterval( () => this.chessboardFiller(), 1000 * 30 )
     setInterval( () => this.broadcast( `game-update-scoreboard`, this.scoreboard() ), 1000 * 2 )
     setInterval( () => {
-      if ( !this.jumps.length )
+      if ( !this.jumps.length && !this.newColors.length )
         return
 
-      wssController.broadcast( `game-update-jumps`, this.jumps )
+      wssController.broadcast( `game-update`, { jumps:this.jumps, colors:this.newColors } )
       this.jumps = []
+      this.newColors = []
     }, 1000 / 60 )
   }
 
@@ -112,6 +114,19 @@ export default class GameController {
       chessmanSize -= 1
 
     playerInitializer( { chessboard:this.chessboard, chessmanSize, player } )
+  }
+
+  setColor( id, { coords, color } ) {
+    if ( !coords || !(`x` in coords) || !(`y` in coords) || !color )
+      return
+
+    const { x, y } = coords
+
+    if ( !Color.isEqual( this.players.get( id ).color, this.chessboard.get( x, y ).entity ) )
+      return
+
+    this.chessboard.setColor( x, y, color )
+    this.newColors.push( { x, y, color } )
   }
 
   destroyPlayer( id ) {

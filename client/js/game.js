@@ -127,9 +127,12 @@ export default class Game {
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
       ws.on( `game-update-spawn`, chessman => chessboard.setEntity( chessman, true ) )
-      ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) =>
-        chessboard.move( from, to ).id === player.id  ?  this.end()  :  null
-      ) )
+      ws.on( `game-update`, ( { jumps, colors } ) => {
+        colors.forEach( ( { x, y, color } ) => this.chessboard.setColor( x, y, color ) )
+        jumps.forEach( ( { from, to } ) =>
+          chessboard.move( from, to ).id === player.id  ?  this.end()  :  null
+        )
+      } )
     } )
   }
 
@@ -164,6 +167,7 @@ export default class Game {
     const { x, y } = this.lastClickedEntity
 
     this.chessboard.setColor( x, y, this.player.color )
+    this.ws.send( `game-update-color`, { coords:{ x, y }, color:this.player.color } )
   }
 
   cursorUp() {

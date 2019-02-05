@@ -73,6 +73,10 @@ export default class PlayerController {
         this.game.playerUpdate( this.id, data )
         break
 
+      case `game-update-color`:
+        this.game.setColor( this.id, data )
+        break
+
       case `close`:
         this.game.destroyPlayer( this.id )
         this.game.broadcast( `chat-new_message`, {
