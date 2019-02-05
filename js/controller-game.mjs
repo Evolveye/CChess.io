@@ -65,7 +65,7 @@ export default class GameController {
   chessboardFiller() {
     const cb = this.chessboard
     const { width, height } = cb
-    const chessPieces = this.chessPiecesOnMap.slice()
+    const chessPieces = Object.assign( {}, this.chessPiecesOnMap )
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
