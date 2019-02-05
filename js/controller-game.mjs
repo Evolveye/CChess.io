@@ -8,12 +8,19 @@ export default class GameController {
     this.jumps = []
     this.newColors = []
     this.piecesPoints = {
-      pawn: 5,
-      rook: 20,
-      knight: 10,
-      bishop: 15,
-      queen: 25,
-      king: 50
+      pawn: 2,
+      rook: 50,
+      knight: 25,
+      bishop: 40,
+      queen: 150,
+      king: 300
+    }
+    this.chessPiecesOnMap = {
+      pawn: 700,
+      rook: 0,
+      knight: 0,
+      bishop: 0,
+      queen: 0
     }
 
     this.chessboardFiller()
@@ -58,13 +65,7 @@ export default class GameController {
   chessboardFiller() {
     const cb = this.chessboard
     const { width, height } = cb
-    const chessPieces = {
-      pawn: 300,
-      rook: 50,
-      knight: 100,
-      bishop: 50,
-      queen: 20
-    }
+    const chessPieces = this.chessPiecesOnMap.slice()
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
@@ -75,7 +76,7 @@ export default class GameController {
       }
 
 
-    for ( const chessPiece in chessPieces )
+    for ( const chessPiece in this.chessPiecesOnMap )
       for ( let i = chessPieces[ chessPiece ];  i > 0;  i-- )
         this.wssController.broadcast( `game-update-spawn`, this.spawn( chessPiece ) )
   }
