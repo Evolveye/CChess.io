@@ -18,7 +18,7 @@ export default class Game {
 
       <div class="console"></div>
 
-      <div class="version">Approximate v: Alpha 0.1</div>
+      <div class="version">Approximate v: Alpha 1.0</div>
     `
 
     /** @type {HTMLCanvasElement} */
