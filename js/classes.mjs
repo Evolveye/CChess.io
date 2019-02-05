@@ -446,6 +446,7 @@ export default class Chessboard {
   setColor( x, y, color ) {
     const field = this.get( x, y )
 
+    console.log( field )
     if ( !field )
       return
 

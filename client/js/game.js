@@ -94,8 +94,8 @@ export default class Game {
       }
 
       window.addEventListener(   `resize`,   () => this.resize() )
-      document.addEventListener( `keypress`, () => {
-        if ( Game.key( `enter`) ) {
+      document.addEventListener( `keydown`, () => {
+        if ( Game.key( `enter` ) ) {
           const c = this.chat
 
           if ( this.mode == `chat` ) {
@@ -109,8 +109,10 @@ export default class Game {
             c.input.focus()
           }
         }
-        else if ( Game.key( `space`) && this.mode != `chat` )
+        else if ( Game.key( `space` ) && this.mode != `chat` )
           this.cameraInit()
+        else if ( Game.key( `shift` ) && this.mode != `chat` )
+          this.setColor()
       } )
       ws.on( `game-update-scoreboard`, scoreboard => {
         this.scoreboard.innerHTML = ``
@@ -156,6 +158,12 @@ export default class Game {
     }
     else
       c.y =  window.innerHeight / 2 - height * tileSize / 2
+  }
+
+  setColor() {
+    const { x, y } = this.lastClickedEntity
+
+    this.chessboard.setColor( x, y, this.player.color )
   }
 
   cursorUp() {
@@ -376,21 +384,22 @@ export default class Game {
 
     if ( typeof key === `string`)
       switch ( key.toLowerCase() ) {
-        case `left`: return k[ 37 ]
-        case `right`: return k[ 39 ]
-        case `up`: return k[ 38 ]
-        case `down`: return k[ 40 ]
-        case `arrow`: return k[ 37 ]  ||  k[ 38 ]  ||  k[ 39 ]  ||  k[ 40 ]
-
         case `w`: return k[ 87 ]
         case `s`: return k[ 83 ]
-        case `a`: return k[ 65 ]
         case `d`: return k[ 68 ]
+        case `a`: return k[ 65 ]
         case `wsad`: return k[ 87 ]  ||  k[ 83 ]  ||  k[ 65 ]  ||  k[ 68 ]
 
-        case `enter`: return k[ 13 ]
+        case `down`: return k[ 40 ]
+        case `right`: return k[ 39 ]
+        case `up`: return k[ 38 ]
+        case `left`: return k[ 37 ]
+        case `arrow`: return k[ 37 ]  ||  k[ 38 ]  ||  k[ 39 ]  ||  k[ 40 ]
+
         case `space`: return k[ 32 ]
         case `ctrl`: return k[ 17 ]
+        case `shift`: return k[ 16 ]
+        case `enter`: return k[ 13 ]
       }
 
     key = k[ key ]
