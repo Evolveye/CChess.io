@@ -66,7 +66,7 @@ export default class GameController {
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
-        const entity = cb.get( x, y )
+        const entity = cb.get( x, y ).entity
 
         if ( entity && !(`id` in entity) )
           --chessPieces[ entity.type ]
@@ -85,9 +85,9 @@ export default class GameController {
     do {
       x = random( 0, cb.width )
       y = random( 0, cb.height )
-    } while ( cb.get( x, y ) )
+    } while ( cb.get( x, y ).entity )
 
-    return cb.set( { type, x, y, color, movingTimestamp:150 } )
+    return cb.setEntity( { type, x, y, color, movingTimestamp:150 } )
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {
@@ -131,7 +131,7 @@ export default class GameController {
   }
 
   playerUpdate( id, { from, to } ) {
-    if ( !Color.isEqual( this.players.get( id ).color, this.chessboard.get( from.x, from.y ) ) )
+    if ( !Color.isEqual( this.players.get( id ).color, this.chessboard.get( from.x, from.y ).entity ) )
       return
 
     const takedField = this.chessboard.move( from, to )

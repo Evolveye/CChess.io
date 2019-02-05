@@ -35,7 +35,7 @@ export default class Game {
     this.mode = `game`
     this.map = null
     this.chessmanSize = null
-    this.lastClickedField = { x:null, y:null }
+    this.lastClickedEntity = { x:null, y:null }
     this.runningOnMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test( navigator.userAgent )
     this.camera = {
       spaceAroundgame: 100,
@@ -62,7 +62,7 @@ export default class Game {
       this.chessmanSize = chessmanSize
       this.console.textContent = `Ping: ${Date.now() - this.ping}ms`
       this.chessboard = new Chessboard( width, height, tileSize, fields, true )
-      this.player = this.chessboard.get( player.x, player.y )
+      this.player = this.chessboard.get( player.x, player.y ).entity
 
       chessboard = this.chessboard
       player = this.player
@@ -124,7 +124,7 @@ export default class Game {
       } )
       ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
       ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
-      ws.on( `game-update-spawn`, chessman => chessboard.set( chessman, true ) )
+      ws.on( `game-update-spawn`, chessman => chessboard.setEntity( chessman, true ) )
       ws.on( `game-update-jumps`, jumps => jumps.forEach( ( { from, to } ) =>
         chessboard.move( from, to ).id === player.id  ?  this.end()  :  null
       ) )
@@ -164,18 +164,18 @@ export default class Game {
 
     const c = this.camera
     const cb = this.chessboard
-    const field = this.lastClickedField
+    const entity = this.lastClickedEntity
     const x = Math.floor( (c.cursor.x - c.x) / cb.tileSize )
     const y = Math.floor( (c.cursor.y - c.y) / cb.tileSize )
 
-    const from = { x:field.x, y:field.y }
+    const from = { x:entity.x, y:entity.y }
     const to = { x, y }
 
-    if ( !field || !cb.isAbove( x, y ) || this.mode == `disconnected` )
+    if ( !entity || !cb.isAbove( x, y ) || this.mode == `disconnected` )
       c.action = null
 
     if ( c.action == `jump` ) {
-      if ( field.x == x && field.y == y )
+      if ( entity.x == x && entity.y == y )
         c.action = `jump-2_clicks`
       else if ( cb.checkJump( from, to ) ) {
         this.send( `game-update-player`, { from, to } )
@@ -185,7 +185,7 @@ export default class Game {
         c.action = null
     }
     else if ( c.action == `jump-2_clicks` ) {
-      if ( (field.x != x || field.y != y) && cb.checkJump( from, to ) )
+      if ( (entity.x != x || entity.y != y) && cb.checkJump( from, to ) )
         this.send( `game-update-player`, { from, to } )
 
       if ( !Game.key( `ctrl` ) )
@@ -208,10 +208,10 @@ export default class Game {
 
     const x = Math.floor( (c.cursor.x - c.x) / this.chessboard.tileSize )
     const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
-    const field = this.chessboard.get( x, y )
+    const entity = this.chessboard.get( x, y ).entity
 
-    if ( Color.isEqual( field, this.player ) && this.mode != `disconnected` ) {
-      this.lastClickedField = field
+    if ( Color.isEqual( entity, this.player ) && this.mode != `disconnected` ) {
+      this.lastClickedEntity = entity
       c.action = `jump`
     }
     else if ( c.action != `jump-2_clicks` )
@@ -285,17 +285,17 @@ export default class Game {
           ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
 
     if ( /^jump/.test( c.action ) ) {
-      const entity = this.lastClickedField
+      const entity = this.lastClickedEntity
 
       ctx.fillStyle = `${entity.color}44`
 
-      for ( const { x, y } of entity.availableFields( cb ) )
+      for ( const { x, y } of entity.availableFields( this.chessboard ) )
         ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
     }
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
-        const entity = this.chessboard.get( x, y )
+        const entity = this.chessboard.get( x, y ).entity
 
         if ( !entity )
           continue
@@ -324,15 +324,16 @@ export default class Game {
 
   cameraCursorUpdate( x, y ) {
     const jumping = /^jump/.test( this.camera.action )
+    const field = this.chessboard.get( x, y )
 
-    if ( Color.isEqual( this.chessboard.get( x, y ), this.player ) ) {
+    if ( field && Color.isEqual( field.entity, this.player ) ) {
       if ( jumping )
         return this.box.style.cursor = `grabbing`
       else
         return this.box.style.cursor = `pointer`
     }
     else if ( jumping )
-      for ( const coords of this.lastClickedField.availableFields( this.chessboard ) )
+      for ( const coords of this.lastClickedEntity.availableFields( this.chessboard ) )
         if ( coords.x == x && coords.y == y )
           return this.box.style.cursor = `grabbing`
 

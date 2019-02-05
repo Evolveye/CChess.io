@@ -79,20 +79,20 @@ export class Color {
       return this.txtFormat
   }
 
+  static getTxtFormat( object ) {
+    if ( typeof object == `string` )
+      return `${object}`
+    if ( `txtFormat` in object )
+      return object.txtFormat
+    if ( `color` in object )
+      return object.color.txtFormat
+  }
+
   static isEqual( entityA, entityB ) {
     if ( !entityA || !entityB )
       return false
 
-    const getColorData = entity => {
-      if ( typeof entity == `string` )
-        return `${entity}`
-      if ( `txtFormat` in entity )
-        return entity.txtFormat
-      if ( `color` in entity )
-        return entity.color.txtFormat
-    }
-
-    return `${getColorData( entityA )}` == `${getColorData( entityB )}`
+    return `${this.getTxtFormat( entityA )}` == `${this.getTxtFormat( entityB )}`
   }
 }
 class Chessman {
@@ -141,7 +141,7 @@ class Chessman {
     if ( chessboard.isABeatableField( chessman.x + x, chessman.y + y, chessman ) )
       data.fields.push( { x:(chessman.x + x), y:(chessman.y + y) } )
 
-    if ( chessboard.get( chessman.x + x, chessman.y + y ) )
+    if ( chessboard.get( chessman.x + x, chessman.y + y ).entity )
       data.wall = true
 
   }
@@ -205,13 +205,13 @@ class Pawn extends Chessman {
     for ( let y = -1;  y < 2;  y++ )
       for ( let x = -1;  x < 2;  x++ )
         if ( cb.isABeatableField( this.x + x, this.y + y, this ) ) {
-          const field = cb.get( this.x + x, this.y + y )
+          const entity = cb.get( this.x + x, this.y + y ).entity
 
           if ( x ** 2 == 1 && y ** 2 == 1  ) {
-            if ( field )
+            if ( entity )
               availableFields.push( { x:(this.x + x), y:(this.y + y) } )
           }
-          else if ( !field )
+          else if ( !entity )
             availableFields.push( { x:(this.x + x), y:(this.y + y) } )
         }
 
@@ -220,7 +220,7 @@ class Pawn extends Chessman {
 
   checkJump( { x, y }, chessboard ) {
     if ( (this.x - x) ** 2 <= 1 && (this.y - y) ** 2 <= 2 ) {
-      const entity = chessboard.get( x, y )
+      const entity = chessboard.get( x, y ).entity
 
       if ( this.x != x ^ this.y != y )
         return !entity
@@ -255,7 +255,7 @@ class Rook extends Chessman {
         x += addToX
         y += addToY
 
-        if ( chessboard.get( x, y ) && (x != this.x || y != this.y) )
+        if ( chessboard.get( x, y ).entity && (x != this.x || y != this.y) )
           return false
       }
 
@@ -318,7 +318,7 @@ class Bishop extends Chessman {
         x += addToX
         y += addToY
 
-        if ( x != this.x && chessboard.get( x, y ) )
+        if ( x != this.x && chessboard.get( x, y ).entity )
           return false
       }
 
@@ -362,7 +362,7 @@ class Queen extends Chessman {
       x += addToX
       y += addToY
 
-      if ( chessboard.get( x, y ) && (x != this.x || y != this.y) )
+      if ( chessboard.get( x, y ).entity && (x != this.x || y != this.y) )
         return false
     }
 
@@ -431,62 +431,81 @@ export default class Chessboard {
     this.tileSize = tileSize
 
     /** @type {Chessman[][]} */
-    this.fields = [ ...Array( height ) ].map( () => Array( width ).fill( null ) )
+    this.fields = [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => ({ color:null, entity:null }) ) )
 
     for ( const row of fields )
       for ( const field of row )
-        if ( field )
-          this.set( field, isTextured )
+        if ( field.entity )
+          this.setEntity( field.entity, isTextured )
   }
 
   get( x, y ) {
-    return (this.fields[ y ] || [])[ x ]
+    return (this.fields[ y ] || [])[ x ] || {}
   }
 
-  set( entity, isTextured ) {
-    const { type, x, y, color, movingTimestamp } = entity
+  setColor( x, y, color ) {
     const field = this.get( x, y )
 
-    const instance = ( () => { switch ( `id` in entity  ?  `player`  :  type ) { // `${type.charAt( 0 ).toUpperCase()}${type.slice( 1 ).toLoverCase()}`
-      case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
-      case `rook`:   return new Rook(   x, y, color, movingTimestamp )
-      case `knight`: return new Knight( x, y, color, movingTimestamp )
-      case `bishop`: return new Bishop( x, y, color, movingTimestamp )
-      case `king`:   return new King(   x, y, color, movingTimestamp )
-      case `queen`:  return new Queen(  x, y, color, movingTimestamp )
-      case `god`:    return new God(    x, y, color, movingTimestamp )
-      case `player`: return new Player( x, y, color, movingTimestamp )
-    } } )()
+    if ( field || !entity )
+      return
 
-    if ( field || !instance )
-      return null
-
-    if ( isTextured )
-      setTexture`../img/${instance}.png`
-
-    if ( `id` in entity )
-      instance.id = entity.id
-    if ( `nickname` in entity )
-      instance.nickname = entity.nickname
-    if ( `scores` in entity )
-      instance.scores = entity.scores
-
-    this.fields[ y ][ x ] = instance
-
-    return instance
+    field.color = Color.getTxtFormat( color )
   }
 
-  remove( x, y ) {
-    const field = this.fields[ y ][ x ]
+  setEntity( entityData, isTextured ) {
+    const { type, x, y, color, movingTimestamp } = entityData
+    let entity = null
 
-    this.fields[ y ][ x ] = null
+    if ( entityData instanceof Chessman )
+      entity = entityData
+    else {
+      const entityOnField = this.get( x, y ).entity
 
-    return field
+      entity = ( () => { switch ( `id` in entityData  ?  `player`  :  type ) {
+        case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
+        case `rook`:   return new Rook(   x, y, color, movingTimestamp )
+        case `knight`: return new Knight( x, y, color, movingTimestamp )
+        case `bishop`: return new Bishop( x, y, color, movingTimestamp )
+        case `king`:   return new King(   x, y, color, movingTimestamp )
+        case `queen`:  return new Queen(  x, y, color, movingTimestamp )
+        case `god`:    return new God(    x, y, color, movingTimestamp )
+        case `player`: return new Player( x, y, color, movingTimestamp )
+      } } )()
+
+      if ( entityOnField || !entity )
+        return null
+
+      if ( isTextured )
+        setTexture`../img/${entity}.png`
+      if ( `nickname` in entityData )
+        entity.nickname = entityData.nickname
+      if ( `scores` in entityData )
+        entity.scores = entityData.scores
+      if ( `id` in entityData ) {
+        entity.id = entityData.id
+        this.setColor( x, y, color )
+      }
+    }
+
+    this.fields[ y ][ x ].entity = entity
+
+    return entity
+  }
+
+  remove( x, y, colorToo=false ) {
+    const field = this.fields[ y ][ x ].entity
+
+    this.fields[ y ][ x ].entity = null
+
+    if ( colorToo )
+      this.fields[ y ][ x ].color = null
+
+    return field.entity
   }
 
   checkJump( from, to ) {
-    const chessman = this.get( from.x, from.y )
-    const nextField = this.get( to.x, to.y )
+    const chessman = this.get( from.x, from.y ).entity
+    const nextField = this.get( to.x, to.y ).entity
 
     if ( !chessman || !chessman.goodTimestamp() || !chessman.checkJump( to, this ) || nextField === undefined )
       return false
@@ -506,7 +525,7 @@ export default class Chessboard {
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
-        const entity = this.get( x, y )
+        const entity = this.get( x, y ).entity
 
         if ( Color.isEqual( entity, color ) ) {
           if ( `id` in entity ) {
@@ -527,15 +546,14 @@ export default class Chessboard {
 
   move( from, to ) {
     const fields = this.fields
-
-    const chessman = this.get( from.x, from.y )
-    const nextField = this.get( to.x, to.y )
+    const chessman = this.get( from.x, from.y ).entity
+    const nextField = this.get( to.x, to.y ).entity
 
     if ( !this.checkJump( from, to ) )
       return false
 
     if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
-      fields[ from.y ][ from.x ] = nextField
+      fields[ from.y ][ from.x ].entity = nextField
       nextField.x = from.x
       nextField.y = from.y
       nextField.lastJump = Date.now()
@@ -548,10 +566,10 @@ export default class Chessboard {
       if ( nextField && `id` in nextField )
         this.removePlayer( nextField.color )
 
-      fields[ from.y ][ from.x ] = null
+      this.remove( from.x, from.y )
     }
 
-    fields[ to.y ][ to.x ] = chessman
+    fields[ to.y ][ to.x ].entity = chessman
     chessman.x = to.x
     chessman.y = to.y
     chessman.lastJump = Date.now()
@@ -562,7 +580,7 @@ export default class Chessboard {
   isABeatableField( x, y, entity ) {
     const field = this.get( x, y )
 
-    return field !== undefined && !Color.isEqual( field, entity )
+    return Object.entries( field ).length && (!field.entity || !Color.isEqual( field.entity, entity ))
   }
 
   isAbove( x, y ) {
