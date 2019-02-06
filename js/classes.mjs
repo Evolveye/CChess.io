@@ -194,7 +194,7 @@ class Chessman {
 }
 
 class Pawn extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
+  constructor( x, y, color, movingTimestamp=100 ) {
     super( x, y, color, movingTimestamp, `pawn` )
   }
 
@@ -233,7 +233,7 @@ class Pawn extends Chessman {
   }
 }
 class Rook extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
+  constructor( x, y, color, movingTimestamp=250 ) {
     super( x, y, color, movingTimestamp, `rook` )
   }
 
@@ -267,7 +267,7 @@ class Rook extends Chessman {
   }
 }
 class Knight extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
+  constructor( x, y, color, movingTimestamp=750 ) {
     super( x, y, color, movingTimestamp, `knight` )
   }
 
@@ -301,7 +301,7 @@ class Knight extends Chessman {
   }
 }
 class Bishop extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
+  constructor( x, y, color, movingTimestamp=500 ) {
     super( x, y, color, movingTimestamp, `bishop` )
   }
 
@@ -330,7 +330,7 @@ class Bishop extends Chessman {
   }
 }
 class Queen extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
+  constructor( x, y, color, movingTimestamp=1000 ) {
     super( x, y, color, movingTimestamp, `queen` )
   }
 
@@ -371,7 +371,7 @@ class Queen extends Chessman {
   }
 }
 class King extends Chessman {
-  constructor( x, y, color, movingTimestamp ) {
+  constructor( x, y, color, movingTimestamp=250 ) {
     super( x, y, color, movingTimestamp, `king` )
   }
 

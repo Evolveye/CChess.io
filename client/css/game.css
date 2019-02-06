@@ -87,7 +87,7 @@
     text-align: center;
   }
   .game .scoreboard .user_data-data {
-    min-width: 75px;
+    flex: 1;
     text-align: right;
   }
 .game .minimap {

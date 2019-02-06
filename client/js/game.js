@@ -27,7 +27,7 @@ export default class Game {
       <div class="info">
         <div class="info-fieldsToCapture"></div>
         <div class="info-ping"></div>
-        <div class="info-version">Approximate v: Alpha 1.0</div>
+        <div class="info-version">Approximate v: Alpha 1.4</div>
       </div>
     `
 
@@ -68,13 +68,14 @@ export default class Game {
     }
 
     ws.onclose( () => {
-      this.mode = `disconnected`
+      this.mode = `stop`
       this.ui.chat.newMessage( {
         data: `Disconnected 👺`,
         type: `disconnected`
       } )
     } )
     ws.on( `game-init`, initialData => this.init( initialData ) )
+    ws.on( `game-no_free_space`, () => this.mode = `stop` )
     ws.send( `game-init`, nickname )
   }
 
@@ -118,6 +119,7 @@ export default class Game {
 
     window.addEventListener(   `resize`,  () => this.resize() )
     document.addEventListener( `keydown`, () => this.keydown() )
+
     ws.on( `game-scoreboard`, scoreboard => {
       this.ui.scoreboard.innerHTML = ``
 
@@ -155,6 +157,8 @@ export default class Game {
 
   keydown() {
     if ( Game.key( `enter` ) ) {
+      const chat = this.ui.chat
+
       if ( this.mode == `chat` ) {
         this.mode = `game`
         chat.box.classList.remove( `active` )
@@ -308,9 +312,6 @@ export default class Game {
   }
 
   cursorUp() {
-    if ( this.mode == `disconnected` )
-      return
-
     const c = this.camera
     const cb = this.chessboard
     const entity = this.lastClickedEntity
@@ -320,7 +321,7 @@ export default class Game {
     const from = { x:entity.x, y:entity.y }
     const to = { x, y }
 
-    if ( !entity || !cb.isAbove( x, y ) || this.mode == `disconnected` )
+    if ( !entity || !cb.isAbove( x, y ) || this.mode == `stop` )
       c.action = null
 
     if ( c.action == `jump` ) {
@@ -359,7 +360,7 @@ export default class Game {
     const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
     const entity = this.chessboard.get( x, y ).entity
 
-    if ( Color.isEqual( entity, this.player ) && this.mode != `disconnected` ) {
+    if ( Color.isEqual( entity, this.player ) && this.mode != `stop` ) {
       this.lastClickedEntity = entity
       c.action = `jump`
     }

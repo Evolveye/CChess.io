@@ -90,14 +90,15 @@ export default class GameController {
 
   spawn( type, color=null ) {
     const cb = this.chessboard
+    let chances = 100
     let x, y
 
     do {
       x = random( 0, cb.width )
       y = random( 0, cb.height )
-    } while ( cb.get( x, y ).entity )
+    } while ( chances-- && cb.get( x, y ).entity )
 
-    return cb.setEntity( { type, x, y, color, movingTimestamp:500 } )
+    return chances  ?  cb.setEntity( { type, x, y, color } )  :  null
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {
@@ -107,6 +108,11 @@ export default class GameController {
       color = new Color
 
     const player = this.spawn( `player`, color )
+    if ( !player ) {
+      playerController.send( `game-no_free_space`, this.scoreboard() )
+      return
+    }
+
     player.id = playerController.id
     player.nickname = nickname
     player.scores = 0
