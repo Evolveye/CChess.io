@@ -73,11 +73,11 @@ export default class PlayerController {
         } )
         break
 
-      case `game-update-player`:
-        this.game.playerUpdate( this.id, data )
+      case `game-jump`:
+        this.game.jump( this.id, data )
         break
 
-      case `game-update-color`:
+      case `game-color`:
         this.game.setColor( this.id, data )
         break
 

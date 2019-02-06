@@ -60,7 +60,7 @@ export default class Game {
     this.lastClickedEntity = { x:null, y:null }
     this.runningOnMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test( navigator.userAgent )
     this.camera = {
-      spaceAroundgame: 100,
+      spaceAroundgame: 200,
       cursor: { x:null, y:null },
       action: null,
       x: null,
@@ -94,14 +94,13 @@ export default class Game {
     player = this.player
 
     setInterval( () => {
-      this.logic()
+      this.cameraMove()
       requestAnimationFrame( () => this.draw() )
     }, 1000 / 60 )
     setInterval( () => {
       this.ping = Date.now()
       ws.send( `ping` )
     }, 1000 * 5 )
-    requestAnimationFrame( () => this.draw() )
 
     if ( this.runningOnMobile ) {
       document.addEventListener( `touchstart`, e  => this.cursorDown( e ) )
@@ -118,29 +117,7 @@ export default class Game {
     }
 
     window.addEventListener(   `resize`,  () => this.resize() )
-    document.addEventListener( `keydown`, () => {
-      if ( Game.key( `enter` ) ) {
-        if ( this.mode == `chat` ) {
-          this.mode = `game`
-          chat.box.classList.remove( `active` )
-          chat.input.blur()
-        }
-        else if ( this.mode == `game` ) {
-          this.mode = `chat`
-          chat.box.classList.add( `active` )
-          chat.input.focus()
-        }
-      }
-      else if ( this.mode != `chat` ) {
-        if ( Game.key( `space` ) )
-          this.cameraInit()
-        else if ( Game.key( `shift` ) )
-          this.setColor()
-        else if ( Game.key( `number` ) )
-          this.transform()
-      }
-    } )
-    ws.on( `pong`, () => info.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
+    document.addEventListener( `keydown`, () => this.keydown() )
     ws.on( `game-update-scoreboard`, scoreboard => {
       this.ui.scoreboard.innerHTML = ``
 
@@ -156,11 +133,13 @@ export default class Game {
       for ( let chesspiece in neededPointsToTransform )
         if ( player.scores >= neededPointsToTransform[ chesspiece ] )
           transform[ chesspiece ].classList.add( `available` )
+    ws.on( `pong`, () => info.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
     } )
+    ws.on( `pong`, () => info.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
     ws.on( `game-transform`, ( { x, y, type } ) => chessboard.transform( type, x, y ) )
-    ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
-    ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
-    ws.on( `game-update-spawn`, chessman => chessboard.setEntity( chessman, true ) )
+    ws.on( `game-despawn-player`, color => chessboard.removePlayer( color ) )
+    ws.on( `game-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
+    ws.on( `game-spawn`, chessman => chessboard.setEntity( chessman, true ) )
     ws.on( `game-update`, ( { jumps, colors } ) => {
       colors.forEach( ( { x, y, color } ) => this.chessboard.setColor( x, y, color ) )
       jumps.forEach( ( { from, to } ) => {
@@ -174,166 +153,29 @@ export default class Game {
     } )
   }
 
-  transform() {
-    const { x, y } = this.lastClickedEntity
-
-    if ( Game.key( `1` ) )
-      ws.send( `game-transform`, { x, y, type:`knight` } )
-    else if ( Game.key( `2` ) )
-      ws.send( `game-transform`, { x, y, type:`bishop` } )
-    else if ( Game.key( `3` ) )
-      ws.send( `game-transform`, { x, y, type:`rook` } )
-  }
-
-  cameraInit() {
-    const { width, height, tileSize } = this.chessboard
-    const c = this.camera
-
-    if ( window.innerWidth < width * tileSize ) {
-      c.x = window.innerWidth / 2 - (this.player.x + .5) * tileSize
-
-      if ( c.x > c.spaceAroundgame )
-        c.x = c.spaceAroundgame
-      else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
-        c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
-    }
-    else
-      c.x = window.innerWidth / 2 - width * tileSize / 2
-
-    if ( window.innerHeight < height * tileSize ) {
-      c.y = window.innerHeight / 2 - (this.player.y + .5) * tileSize
-
-      if ( c.y > c.spaceAroundgame )
-        c.y = c.spaceAroundgame
-      else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
-        c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
-    }
-    else
-      c.y =  window.innerHeight / 2 - height * tileSize / 2
-  }
-
-  setColor() {
-    const { x, y } = this.lastClickedEntity
-    const player = this.player
-
-    if ( player.fieldsToCapture <= 0 )
-      return
-
-    let prevColor = this.chessboard.setColor( x, y, player.color )
-
-    if ( prevColor === undefined )
-      return
-
-    --player.fieldsToCapture
-    this.ws.send( `game-update-color`, { coords:{ x, y }, color:player.color } )
-  }
-
-  cursorUp() {
-    if ( this.mode == `disconnected` )
-      return
-
-    const c = this.camera
-    const cb = this.chessboard
-    const entity = this.lastClickedEntity
-    const x = Math.floor( (c.cursor.x - c.x) / cb.tileSize )
-    const y = Math.floor( (c.cursor.y - c.y) / cb.tileSize )
-
-    const from = { x:entity.x, y:entity.y }
-    const to = { x, y }
-
-    if ( !entity || !cb.isAbove( x, y ) || this.mode == `disconnected` )
-      c.action = null
-
-    if ( c.action == `jump` ) {
-      if ( entity.x == x && entity.y == y )
-        c.action = `jump-2_clicks`
-      else if ( cb.checkJump( from, to ) ) {
-        this.send( `game-update-player`, { from, to } )
-        c.action = null
+  keydown() {
+    if ( Game.key( `enter` ) ) {
+      if ( this.mode == `chat` ) {
+        this.mode = `game`
+        chat.box.classList.remove( `active` )
+        chat.input.blur()
       }
-      else
-        c.action = null
-    }
-    else if ( c.action == `jump-2_clicks` ) {
-      if ( (entity.x != x || entity.y != y) && cb.checkJump( from, to ) )
-        this.send( `game-update-player`, { from, to } )
-
-      if ( !Game.key( `ctrl` ) )
-        c.action = null
-    }
-    else
-      c.action = null
-
-    this.cameraCursorUpdate( x, y )
-  }
-
-  cursorDown( e ) {
-    const c = this.camera
-
-    if ( this.runningOnMobile ) {
-      const coords = e.touches[0] || e.changedTouches[0]
-      c.cursor.x = coords.pageX
-      c.cursor.y = coords.pageY
+      else if ( this.mode == `game` ) {
+        this.mode = `chat`
+        chat.box.classList.add( `active` )
+        chat.input.focus()
+      }
     }
 
-    const x = Math.floor( (c.cursor.x - c.x) / this.chessboard.tileSize )
-    const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
-    const entity = this.chessboard.get( x, y ).entity
-
-    if ( Color.isEqual( entity, this.player ) && this.mode != `disconnected` ) {
-      this.lastClickedEntity = entity
-      c.action = `jump`
-    }
-    else if ( c.action != `jump-2_clicks` )
-      c.action = `moving`
-
-    this.cameraCursorUpdate( x, y )
-  }
-
-  cursorMove( e ) {
-    const c = this.camera
-    const { width, height, tileSize } = this.chessboard
-    const coords = this.runningOnMobile  ?  e.touches[0] || e.changedTouches[0]  :  e
-    const newX = coords.clientX - c.cursor.x + c.x
-    const newY = coords.clientY - c.cursor.y + c.y
-
-    c.cursor.x = coords.pageX
-    c.cursor.y = coords.pageY
-
-    const x = Math.floor( (c.cursor.x - c.x) / tileSize )
-    const y = Math.floor( (c.cursor.y - c.y) / tileSize )
-
-    this.cameraCursorUpdate( x, y )
-
-    if ( c.action != `moving` )
+    if ( this.mode != `game`)
       return
 
-    if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
-      c.x = newX
-
-    if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
-      c.y = newY
-
-  }
-
-  logic() {
-    if ( this.mode == `game` ) {
-      const cb = this.chessboard
-      const c = this.camera
-
-      let cameraJump = cb.tileSize / 2
-
-      if ( Game.key( `w` ) && c.y < c.spaceAroundgame )
-        c.y += cameraJump
-      if ( Game.key( `s` ) && c.y > window.innerHeight - c.spaceAroundgame - cb.height * cb.tileSize )
-        c.y -= cameraJump
-      if ( Game.key( `a` ) && c.x < c.spaceAroundgame )
-        c.x += cameraJump
-      if ( Game.key( `d` ) && c.x > window.innerWidth - c.spaceAroundgame - cb.width * cb.tileSize )
-        c.x -= cameraJump
-    }
-    else if ( this.mode == `chat` ) {
-    }
+    if ( Game.key( `space` ) )
+      this.cameraInit()
+    if ( Game.key( `shift` ) )
+      this.setColor()
+    if ( Game.key( `number` ) )
+      this.transform()
   }
 
   draw() {
@@ -408,6 +250,141 @@ export default class Game {
       }
   }
 
+  cameraInit() {
+    const { width, height, tileSize } = this.chessboard
+    const c = this.camera
+
+    if ( window.innerWidth < width * tileSize ) {
+      c.x = window.innerWidth / 2 - (this.player.x + .5) * tileSize
+
+      if ( c.x > c.spaceAroundgame )
+        c.x = c.spaceAroundgame
+      else if ( c.x < window.innerWidth - c.spaceAroundgame - width * tileSize )
+        c.x = window.innerWidth - c.spaceAroundgame - width * tileSize
+    }
+    else
+      c.x = window.innerWidth / 2 - width * tileSize / 2
+
+    if ( window.innerHeight < height * tileSize ) {
+      c.y = window.innerHeight / 2 - (this.player.y + .5) * tileSize
+
+      if ( c.y > c.spaceAroundgame )
+        c.y = c.spaceAroundgame
+      else if ( c.y < window.innerHeight - c.spaceAroundgame - height * tileSize )
+        c.y = window.innerHeight - c.spaceAroundgame - height * tileSize
+    }
+    else
+      c.y =  window.innerHeight / 2 - height * tileSize / 2
+  }
+
+  cameraMove() {
+    if ( this.mode != `game`)
+      return
+
+    const cb = this.chessboard
+    const c = this.camera
+
+    let cameraJump = cb.tileSize / 2
+
+    if ( Game.key( `w` ) && c.y < c.spaceAroundgame )
+      c.y += cameraJump
+    if ( Game.key( `s` ) && c.y > window.innerHeight - c.spaceAroundgame - cb.height * cb.tileSize )
+      c.y -= cameraJump
+    if ( Game.key( `a` ) && c.x < c.spaceAroundgame )
+      c.x += cameraJump
+    if ( Game.key( `d` ) && c.x > window.innerWidth - c.spaceAroundgame - cb.width * cb.tileSize )
+      c.x -= cameraJump
+
+  }
+
+  cursorUp() {
+    if ( this.mode == `disconnected` )
+      return
+
+    const c = this.camera
+    const cb = this.chessboard
+    const entity = this.lastClickedEntity
+    const x = Math.floor( (c.cursor.x - c.x) / cb.tileSize )
+    const y = Math.floor( (c.cursor.y - c.y) / cb.tileSize )
+
+    const from = { x:entity.x, y:entity.y }
+    const to = { x, y }
+
+    if ( !entity || !cb.isAbove( x, y ) || this.mode == `disconnected` )
+      c.action = null
+
+    if ( c.action == `jump` ) {
+      if ( entity.x == x && entity.y == y )
+        c.action = `jump-2_clicks`
+      else if ( cb.checkJump( from, to ) ) {
+        this.send( `game-jump`, { from, to } )
+        c.action = null
+      }
+      else
+        c.action = null
+    }
+    else if ( c.action == `jump-2_clicks` ) {
+      if ( (entity.x != x || entity.y != y) && cb.checkJump( from, to ) )
+        this.send( `game-jump`, { from, to } )
+
+      if ( !Game.key( `ctrl` ) )
+        c.action = null
+    }
+    else
+      c.action = null
+
+    this.cameraCursorUpdate( x, y )
+  }
+
+  cursorDown( e ) {
+    const c = this.camera
+
+    if ( this.runningOnMobile ) {
+      const coords = e.touches[0] || e.changedTouches[0]
+      c.cursor.x = coords.pageX
+      c.cursor.y = coords.pageY
+    }
+
+    const x = Math.floor( (c.cursor.x - c.x) / this.chessboard.tileSize )
+    const y = Math.floor( (c.cursor.y - c.y) / this.chessboard.tileSize )
+    const entity = this.chessboard.get( x, y ).entity
+
+    if ( Color.isEqual( entity, this.player ) && this.mode != `disconnected` ) {
+      this.lastClickedEntity = entity
+      c.action = `jump`
+    }
+    else if ( c.action != `jump-2_clicks` )
+      c.action = `moving`
+
+    this.cameraCursorUpdate( x, y )
+  }
+
+  cursorMove( e ) {
+    const c = this.camera
+    const { width, height, tileSize } = this.chessboard
+    const coords = this.runningOnMobile  ?  e.touches[0] || e.changedTouches[0]  :  e
+    const newX = coords.clientX - c.cursor.x + c.x
+    const newY = coords.clientY - c.cursor.y + c.y
+
+    c.cursor.x = coords.pageX
+    c.cursor.y = coords.pageY
+
+    const x = Math.floor( (c.cursor.x - c.x) / tileSize )
+    const y = Math.floor( (c.cursor.y - c.y) / tileSize )
+
+    this.cameraCursorUpdate( x, y )
+
+    if ( c.action != `moving` )
+      return
+
+    if ( window.innerWidth - c.spaceAroundgame - width * tileSize < newX && newX < c.spaceAroundgame )
+      c.x = newX
+
+    if ( window.innerHeight - c.spaceAroundgame - height * tileSize < newY && newY < c.spaceAroundgame )
+      c.y = newY
+
+  }
+
   cameraCursorUpdate( x, y ) {
     const jumping = /^jump/.test( this.camera.action )
     const field = this.chessboard.get( x, y )
@@ -424,6 +401,33 @@ export default class Game {
           return this.box.style.cursor = `grabbing`
 
     this.box.style.cursor = `default`
+  }
+
+  setColor() {
+    const { x, y } = this.lastClickedEntity
+    const player = this.player
+
+    if ( player.fieldsToCapture <= 0 )
+      return
+
+    let prevColor = this.chessboard.setColor( x, y, player.color )
+
+    if ( prevColor === undefined )
+      return
+
+    --player.fieldsToCapture
+    this.ws.send( `game-color`, { coords:{ x, y }, color:player.color } )
+  }
+
+  transform() {
+    const { x, y } = this.lastClickedEntity
+
+    if ( Game.key( `1` ) )
+      ws.send( `game-transform`, { x, y, type:`knight` } )
+    else if ( Game.key( `2` ) )
+      ws.send( `game-transform`, { x, y, type:`bishop` } )
+    else if ( Game.key( `3` ) )
+      ws.send( `game-transform`, { x, y, type:`rook` } )
   }
 
   send( type, data ) {

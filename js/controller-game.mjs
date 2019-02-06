@@ -32,7 +32,7 @@ export default class GameController {
 
     this.chessboardFiller()
     setInterval( () => this.chessboardFiller(), 1000 * 30 )
-    setInterval( () => this.broadcast( `game-update-scoreboard`, this.scoreboard() ), 1000 )
+    setInterval( () => this.broadcast( `game-scoreboard`, this.scoreboard() ), 1000 )
     setInterval( () => {
       if ( !this.jumps.length && !this.newColors.length )
         return
@@ -85,7 +85,7 @@ export default class GameController {
 
     for ( const chessPiece in this.chessPiecesOnMap )
       for ( let i = chessPieces[ chessPiece ];  i > 0;  i-- )
-        this.wssController.broadcast( `game-update-spawn`, this.spawn( chessPiece ) )
+        this.wssController.broadcast( `game-spawn`, this.spawn( chessPiece ) )
   }
 
   spawn( type, color=null ) {
@@ -112,8 +112,8 @@ export default class GameController {
     player.scores = 0
     player.fieldsToCapture = 0
 
-    playerController.broadcast( `game-update-spawn`, player )
-    playerController.send( `game-update-scoreboard`, this.scoreboard() )
+    playerController.broadcast( `game-spawn`, player )
+    playerController.send( `game-scoreboard`, this.scoreboard() )
 
     this.players.set( playerController.id, Object.assign( playerController, player ) )
 
@@ -167,15 +167,15 @@ export default class GameController {
 
     for ( const entity of this.chessboard.removePlayer( player.color ) )
       if ( !(`id` in entity) )
-        player.broadcast( `game-update-spawn`, this.spawn( entity.type ) )
+        player.broadcast( `game-spawn`, this.spawn( entity.type ) )
 
-    player.broadcast( `game-update-despawn-player`, player.color )
+    player.broadcast( `game-despawn-player`, player.color )
 
     if ( this.players.has( id ) )
       this.players.delete( id )
   }
 
-  playerUpdate( id, { from, to } ) {
+  jump( id, { from, to } ) {
     from.entity = this.chessboard.get( from.x, from.y ).entity
 
     if ( !Color.isEqual( this.players.get( id ).color, from.entity ) )
