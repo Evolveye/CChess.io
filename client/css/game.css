@@ -7,7 +7,7 @@
   }
   .game .user_data-nickname {
     font-weight: bold;
-    color: #999;
+    color: #ddd;
   }
   .game .user_data-color {
     width: 10px;
@@ -50,21 +50,55 @@
   height: 100vh;
   background-color: #843737
 }
+.game .transform img,
 .game .scoreboard,
 .game .version,
-.game .stats {
+.game .info {
   background-color: #333;
   padding: 5px;
 }
+.game .transform {
+  display: flex;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX( -50% );
+}
+  .game .transform-item {
+    position: relative;
+    opacity: .2;
+    margin-right: 5px;
+  }
+  .game .transform-item.available {
+    opacity: 1;
+  }
+  /* .game .transform-item.available::before {
+    content: attr( data-num );
+    display: block;
+    position: absolute;
+    left: 1px;
+    top: 1px;
+    color: #eee;
+  } */
 .game .scoreboard {
   right: 10px;
   top: 10px;
 }
-.game .version {
+  .game .scoreboard-title {
+    text-align: center;
+  }
+  .game .scoreboard .user_data-data {
+    min-width: 75px;
+    text-align: right;
+  }
+.game .minimap {
   right: 10px;
   bottom: 10px;
+  width: 100px;
+  height: 100px;
+  border: 1px solid var( --color-bgr-dark );
+  background-color: #fff;
 }
-.game .stats {
+.game .info {
   left: 10px;
   bottom: 10px;
 }

@@ -23,11 +23,11 @@ export default class GameController {
       queen: 0
     }
     this.neededPointsToTransform = {
-      pawn: 0,
+      // pawn: 0,
       rook: 1500,
-      knight: 400,
+      knight: 500,
       bishop: 1000,
-      queen: Infinity
+      // queen: Infinity
     }
 
     this.chessboardFiller()
@@ -122,7 +122,12 @@ export default class GameController {
     if ( !(chessmanSize % 2) )
       chessmanSize -= 1
 
-    playerInitializer( { chessboard:this.chessboard, chessmanSize, player } )
+    playerInitializer( {
+      neededPointsToTransform: this.neededPointsToTransform,
+      chessboard: this.chessboard,
+      chessmanSize,
+      player
+    } )
   }
 
   transform( id, { x, y, type } ) {

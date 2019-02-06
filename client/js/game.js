@@ -12,36 +12,41 @@ export default class Game {
       <section class="chat"></section>
 
       <section class="transform">
-        <div class="transform-knight"></div>
-        <div class="transform-bishop"></div>
-        <div class="transform-rook"></div>
+        <div data-num="1" class="transform-item is-knight"><img src="./img/knight.png"></div>
+        <div data-num="2" class="transform-item is-bishop"><img src="./img/bishop.png"></div>
+        <div data-num="3" class="transform-item is-rook"><img src="./img/rook.png"></div>
       </section>
 
       <section class="scoreboard">
-        <h3>Scoreboard</h3>
+        <h3 class="scoreboard-title">Scoreboard</h3>
         <div class="scoreboard-fields"></div>
       </section>
 
-      <div class="version">Approximate v: Alpha 1.0</div>
+      <canvas class="minimap"></canvas>
 
-      <div class="stats">
-        <div class="stats-fieldsToCapture"></div>
-        <div class="stats-ping"></div>
+      <div class="info">
+        <div class="info-fieldsToCapture"></div>
+        <div class="info-ping"></div>
+        <div class="info-version">Approximate v: Alpha 1.0</div>
       </div>
     `
 
-    /** @type {HTMLCanvasElement} */
-    this.canvas = this.box.querySelector( `.canvas-main` )
-    this.ctx = this.canvas.getContext( `2d` )
-
-    this.chat = new Chat( this.box.querySelector( `.chat` ) )
-    this.stats = {
-      fieldsToCapture: this.box.querySelector( `.stats-fieldsToCapture` ),
-      ping: this.box.querySelector( `.stats-ping` )
+    this.ui = {
+      canvas: this.box.querySelector( `.canvas-main` ),
+      chat: new Chat( this.box.querySelector( `.chat` ) ),
+      scoreboard: this.box.querySelector( `.scoreboard-fields` ),
+      transform: {
+        knight: this.box.querySelector( `.is-knight` ),
+        bishop: this.box.querySelector( `.is-bishop` ),
+        rook: this.box.querySelector( `.is-rook` )
+      },
+      info: {
+        fieldsToCapture: this.box.querySelector( `.info-fieldsToCapture` ),
+        ping: this.box.querySelector( `.info-ping` )
+      },
     }
-
-    this.scoreboard = this.box.querySelector( `.scoreboard-fields` )
-
+    /** @type {CanvasRenderingContext2D} */
+    this.ctx = this.ui.canvas.getContext( `2d` )
     this.ws = ws
     this.ping = Date.now()
     this.mode = `game`
@@ -61,25 +66,25 @@ export default class Game {
 
     ws.onclose( () => {
       this.mode = `disconnected`
-      this.chat.newMessage( {
+      this.ui.chat.newMessage( {
         data: `Disconnected 👺`,
         type: `disconnected`
       } )
     } )
-    ws.on( `pong`, () => this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
     ws.on( `game-init`, initialData => this.init( initialData ) )
     ws.send( `game-init`, nickname )
   }
 
-  init( { chessmanSize, player, chessboard } ) {
+  init( { chessmanSize, player, chessboard, neededPointsToTransform } ) {
     const ws = this.ws
     const { width, height, tileSize, fields } = chessboard
+    const { chat, info, transform } = this.ui
 
     this.chessmanSize = chessmanSize
-    this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms`
     this.chessboard = new Chessboard( width, height, tileSize, fields, true )
     this.player = this.chessboard.get( player.x, player.y ).entity
 
+    info.ping.textContent = `Ping: ${Date.now() - this.ping}ms`
     chessboard = this.chessboard
     player = this.player
 
@@ -100,8 +105,8 @@ export default class Game {
       document.addEventListener( `touchend`,   () => this.cursorUp() )
       document.addEventListener( `touchmove`,  e  => this.cursorMove( e ) )
 
-      this.chat.input.placeholder = `Chat...`
-      this.chat.box.classList.add( `active` )
+      chat.input.placeholder = `Chat...`
+      chat.box.classList.add( `active` )
     }
     else {
       document.addEventListener( `mouseup`,   () => this.cursorUp() )
@@ -109,20 +114,20 @@ export default class Game {
       document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
     }
 
+    let block = false
+
     window.addEventListener(   `resize`,  () => this.resize() )
     document.addEventListener( `keydown`, () => {
       if ( Game.key( `enter` ) ) {
-        const c = this.chat
-
         if ( this.mode == `chat` ) {
           this.mode = `game`
-          c.box.classList.remove( `active` )
-          c.input.blur()
+          chat.box.classList.remove( `active` )
+          chat.input.blur()
         }
         else if ( this.mode == `game` ) {
           this.mode = `chat`
-          c.box.classList.add( `active` )
-          c.input.focus()
+          chat.box.classList.add( `active` )
+          chat.input.focus()
         }
       }
       else if ( this.mode != `chat` ) {
@@ -134,17 +139,22 @@ export default class Game {
           this.transform()
       }
     } )
-    ws.on( `game-update-scoreboard`, scoreboard => {
-      this.scoreboard.innerHTML = ``
+    ws.on( `pong`, () => info.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
+    ws.on( `game-update-scoreboard`, scoreboard => { if ( block ) return; block = true
+      this.ui.scoreboard.innerHTML = ``
 
       for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
         if ( field.nickname == player.nickname )
           player.scores = field.data
 
-        this.scoreboard.appendChild( userData( field ) )
+        this.ui.scoreboard.appendChild( userData( field ) )
       }
 
-      this.stats.fieldsToCapture.textContent = player.fieldsToCapture
+      info.fieldsToCapture.textContent = `Fields to capture: ${player.fieldsToCapture}`
+
+      for ( let chesspiece in neededPointsToTransform )
+        if ( player.scores >= neededPointsToTransform[ chesspiece ] )
+          transform[ chesspiece ].classList.add( `available` )
     } )
     ws.on( `game-transform`, ( { x, y, type } ) => chessboard.transform( type, x, y ) )
     ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
@@ -354,10 +364,13 @@ export default class Game {
     if ( /^jump/.test( c.action ) ) {
       const entity = this.lastClickedEntity
 
-      ctx.fillStyle = `${entity.color}44`
-
-      for ( const { x, y } of entity.availableFields( this.chessboard ) )
+      for ( const { x, y } of entity.availableFields( this.chessboard ) ) {
+        ctx.fillStyle = `${entity.color}55`
         ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
+
+        ctx.fillStyle = `#fff2`
+        ctx.fillRect( c.x + x * tileSize + 5, c.y + y * tileSize + 5, tileSize - 10, tileSize - 10 )
+      }
     }
 
     for ( let y = 0;  y < height;  y++ )
@@ -371,8 +384,8 @@ export default class Game {
         let eY = c.y + (y + .5) * tileSize
 
         if ( entity.protected() ) {
-          ctx.fillStyle = `#0000ff44`
-          ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
+          ctx.strokeStyle = `${entity.color}aa`
+          ctx.strokeRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
         }
 
         ctx.drawImage( entity.tex, eX - cSize / 2, eY - cSize / 2, cSize, cSize )
@@ -381,9 +394,9 @@ export default class Game {
           const nickname = entity.nickname
           const width = ctx.measureText( nickname ).width
 
-          ctx.fillStyle = `#00000044`
+          ctx.fillStyle = `#0006`
           ctx.fillRect( eX - 5 - width / 2, eY - 5 - 15 - cSize / 2, width + 10, 15 + 10 )
-          ctx.fillStyle = `#ffffff`
+          ctx.fillStyle = `#fff`
           ctx.fillText( nickname, eX - width / 2, eY - cSize / 2 )
         }
       }
@@ -419,10 +432,10 @@ export default class Game {
 
     ctx.imageSmoothingEnabled = false
     ctx.font = `15px monospace`
-    ctx.strokeStyle = `white`
-    ctx.lineWidth = 1
+    ctx.lineWidth = 5
 
     ctx.fillStyle = `#843737`
+    ctx.strokeStyle = `blck`
     ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
   }
 
