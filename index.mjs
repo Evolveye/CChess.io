@@ -95,7 +95,10 @@ class WssController {
 
         ws.playerController.eventHandler( type, data )
       }
-      ws.onclose = () => ws.playerController.eventHandler( `close` )
+      ws.onclose = () => {
+        console.log( ws.playerController.nickname )
+        ws.playerController.eventHandler( `close` )
+      }
     } )
   }
 

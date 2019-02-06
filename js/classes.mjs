@@ -454,6 +454,8 @@ export default class Chessboard {
     const field = this.get( x, y )
     const king = field.entity
 
+    console.log( type, x, y, king.color )
+
     if ( !king || king.type != `king` || !Color.isEqual( field.color, king.color ) )
       return false
 

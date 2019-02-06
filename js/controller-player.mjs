@@ -84,6 +84,8 @@ export default class PlayerController {
         break
 
       case `close`:
+        if ( !this.nickname )
+          return
         this.game.destroyPlayer( this.id )
         this.game.broadcast( `chat-new_message`, {
           data: `${this.nickname} left the game 👺`,
