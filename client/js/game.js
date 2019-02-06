@@ -27,7 +27,7 @@ export default class Game {
       <div class="info">
         <div class="info-fieldsToCapture"></div>
         <div class="info-ping"></div>
-        <div class="info-version">Approximate v: Alpha 1.4</div>
+        <div class="info-version">Approximate v: Alpha 1.5</div>
       </div>
     `
 
