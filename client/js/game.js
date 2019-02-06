@@ -117,8 +117,6 @@ export default class Game {
       document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
     }
 
-    let block = false
-
     window.addEventListener(   `resize`,  () => this.resize() )
     document.addEventListener( `keydown`, () => {
       if ( Game.key( `enter` ) ) {
@@ -143,7 +141,7 @@ export default class Game {
       }
     } )
     ws.on( `pong`, () => info.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
-    ws.on( `game-update-scoreboard`, scoreboard => { if ( block ) return; block = true
+    ws.on( `game-update-scoreboard`, scoreboard => {
       this.ui.scoreboard.innerHTML = ``
 
       for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
