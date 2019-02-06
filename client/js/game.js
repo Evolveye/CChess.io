@@ -292,7 +292,7 @@ export default class Game {
   }
 
   cameraMove() {
-    if ( this.mode != `game`)
+    if ( this.mode != `game` && this.mode != `stop` )
       return
 
     const cb = this.chessboard
