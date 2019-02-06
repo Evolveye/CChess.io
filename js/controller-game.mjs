@@ -187,13 +187,13 @@ export default class GameController {
   }
 
   jump( id, { from, to } ) {
+    const player = this.players.get( id )
     from.entity = this.chessboard.get( from.x, from.y ).entity
 
-    if ( !Color.isEqual( this.players.get( id ).color, from.entity ) )
+    if ( !player || !Color.isEqual( player.color, from.entity ) )
       return
 
     const takedField = this.chessboard.move( from, to )
-    const player = this.players.get( id )
 
     if ( !takedField )
       return
