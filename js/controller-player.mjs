@@ -56,6 +56,10 @@ export default class PlayerController {
           this.send( `game-nickname`, false )
         break
 
+      case `game-transform`:
+        this.game.transform( this.id, data )
+        break
+
       case `game-init`:
         this.game.spawnPlayer( this, data, data => {
           this.color = data.player.color.txtFormat

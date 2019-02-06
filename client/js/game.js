@@ -61,93 +61,111 @@ export default class Game {
       } )
     } )
     ws.on( `pong`, () => this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms` )
+    ws.on( `game-init`, initialData => this.init( initialData ) )
     ws.send( `game-init`, nickname )
-    ws.on( `game-init`, ( { chessmanSize, player, chessboard } ) => {
-      const { width, height, tileSize, fields } = chessboard
+  }
 
-      this.chessmanSize = chessmanSize
-      this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms`
-      this.chessboard = new Chessboard( width, height, tileSize, fields, true )
-      this.player = this.chessboard.get( player.x, player.y ).entity
+  init( { chessmanSize, player, chessboard } ) {
+    const ws = this.ws
+    const { width, height, tileSize, fields } = chessboard
 
-      chessboard = this.chessboard
-      player = this.player
+    this.chessmanSize = chessmanSize
+    this.stats.ping.textContent = `Ping: ${Date.now() - this.ping}ms`
+    this.chessboard = new Chessboard( width, height, tileSize, fields, true )
+    this.player = this.chessboard.get( player.x, player.y ).entity
 
+    chessboard = this.chessboard
+    player = this.player
 
-      this.cameraInit()
+    this.cameraInit()
 
-      setInterval( () => {
-        this.logic()
-        requestAnimationFrame( () => this.draw() )
-      }, 1000 / 60 )
-      setInterval( () => {
-        this.ping = Date.now()
-        ws.send( `ping` )
-      }, 1000 * 5 )
+    setInterval( () => {
+      this.logic()
       requestAnimationFrame( () => this.draw() )
+    }, 1000 / 60 )
+    setInterval( () => {
+      this.ping = Date.now()
+      ws.send( `ping` )
+    }, 1000 * 5 )
+    requestAnimationFrame( () => this.draw() )
 
-      if ( this.runningOnMobile ) {
-        document.addEventListener( `touchstart`, e  => this.cursorDown( e ) )
-        document.addEventListener( `touchend`,   () => this.cursorUp() )
-        document.addEventListener( `touchmove`,  e  => this.cursorMove( e ) )
+    if ( this.runningOnMobile ) {
+      document.addEventListener( `touchstart`, e  => this.cursorDown( e ) )
+      document.addEventListener( `touchend`,   () => this.cursorUp() )
+      document.addEventListener( `touchmove`,  e  => this.cursorMove( e ) )
 
-        this.chat.input.placeholder = `Chat...`
-        this.chat.box.classList.add( `active` )
-      }
-      else {
-        document.addEventListener( `mouseup`,   () => this.cursorUp() )
-        document.addEventListener( `mousedown`, () => this.cursorDown() )
-        document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
-      }
+      this.chat.input.placeholder = `Chat...`
+      this.chat.box.classList.add( `active` )
+    }
+    else {
+      document.addEventListener( `mouseup`,   () => this.cursorUp() )
+      document.addEventListener( `mousedown`, () => this.cursorDown() )
+      document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
+    }
 
-      window.addEventListener(   `resize`,   () => this.resize() )
-      document.addEventListener( `keydown`, () => {
-        if ( Game.key( `enter` ) ) {
-          const c = this.chat
+    window.addEventListener(   `resize`,  () => this.resize() )
+    document.addEventListener( `keydown`, () => {
+      if ( Game.key( `enter` ) ) {
+        const c = this.chat
 
-          if ( this.mode == `chat` ) {
-            this.mode = `game`
-            c.box.classList.remove( `active` )
-            c.input.blur()
-          }
-          else if ( this.mode == `game` ) {
-            this.mode = `chat`
-            c.box.classList.add( `active` )
-            c.input.focus()
-          }
+        if ( this.mode == `chat` ) {
+          this.mode = `game`
+          c.box.classList.remove( `active` )
+          c.input.blur()
         }
-        else if ( Game.key( `space` ) && this.mode != `chat` )
+        else if ( this.mode == `game` ) {
+          this.mode = `chat`
+          c.box.classList.add( `active` )
+          c.input.focus()
+        }
+      }
+      else if ( this.mode != `chat` ) {
+        if ( Game.key( `space` ) )
           this.cameraInit()
-        else if ( Game.key( `shift` ) && this.mode != `chat` )
+        else if ( Game.key( `shift` ) )
           this.setColor()
-      } )
-      ws.on( `game-update-scoreboard`, scoreboard => {
-        this.scoreboard.innerHTML = ``
+        else if ( Game.key( `number` ) )
+          this.transform()
+      }
+    } )
+    ws.on( `game-update-scoreboard`, scoreboard => {
+      this.scoreboard.innerHTML = ``
 
-        for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
-          if ( field.nickname == player.nickname )
-            player.scores = field.data
+      for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
+        if ( field.nickname == player.nickname )
+          player.scores = field.data
 
-          this.scoreboard.appendChild( userData( field ) )
-        }
+        this.scoreboard.appendChild( userData( field ) )
+      }
 
-        this.stats.fieldsToCapture.textContent = player.fieldsToCapture
-      } )
-      ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
-      ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
-      ws.on( `game-update-spawn`, chessman => chessboard.setEntity( chessman, true ) )
-      ws.on( `game-update`, ( { jumps, colors } ) => {
-        colors.forEach( ( { x, y, color } ) => this.chessboard.setColor( x, y, color ) )
-        jumps.forEach( ( { from, to } ) => {
-          const takedField = chessboard.move( from, to )
+      this.stats.fieldsToCapture.textContent = player.fieldsToCapture
+    } )
+    ws.on( `game-transform`, ( { x, y, type } ) => chessboard.transform( type, x, y ) )
+    ws.on( `game-update-despawn-player`, color => chessboard.removePlayer( color ) )
+    ws.on( `game-update-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
+    ws.on( `game-update-spawn`, chessman => chessboard.setEntity( chessman, true ) )
+    ws.on( `game-update`, ( { jumps, colors } ) => {
+      colors.forEach( ( { x, y, color } ) => this.chessboard.setColor( x, y, color ) )
+      jumps.forEach( ( { from, to } ) => {
+        const takedField = chessboard.move( from, to )
 
-          if ( takedField.id === player.id )
-            this.end()
-          else if ( takedField.type == `pawn` )
-            ++player.fieldsToCapture
-        } )
+        if ( takedField.id === player.id )
+          this.end()
+        else if ( takedField.type == `pawn` )
+          ++player.fieldsToCapture
       } )
     } )
+  }
+
+  transform() {
+    const { x, y } = this.lastClickedEntity
+
+    if ( Game.key( `1` ) )
+      ws.send( `game-transform`, { x, y, type:`knight` } )
+    else if ( Game.key( `2` ) )
+      ws.send( `game-transform`, { x, y, type:`bishop` } )
+    else if ( Game.key( `3` ) )
+      ws.send( `game-transform`, { x, y, type:`rook` } )
   }
 
   cameraInit() {
@@ -415,13 +433,26 @@ export default class Game {
         case `s`: return k[ 83 ]
         case `d`: return k[ 68 ]
         case `a`: return k[ 65 ]
-        case `wsad`: return k[ 87 ]  ||  k[ 83 ]  ||  k[ 65 ]  ||  k[ 68 ]
+        case `wsad`: return k[ 87 ] || k[ 83 ] || k[ 65 ] || k[ 68 ]
+
+        case `9`: return k[ 57 ]
+        case `8`: return k[ 56 ]
+        case `7`: return k[ 55 ]
+        case `6`: return k[ 54 ]
+        case `5`: return k[ 53 ]
+        case `4`: return k[ 52 ]
+        case `3`: return k[ 51 ]
+        case `2`: return k[ 50 ]
+        case `1`: return k[ 49 ]
+        case `0`: return k[ 48 ]
+        case `number`: return k[ 48 ] || k[ 49 ] || k[ 50 ] || k[ 51 ] || k[ 52 ]
+                           || k[ 53 ] || k[ 54 ] || k[ 55 ] || k[ 56 ] || k[ 57 ]
 
         case `down`: return k[ 40 ]
         case `right`: return k[ 39 ]
         case `up`: return k[ 38 ]
         case `left`: return k[ 37 ]
-        case `arrow`: return k[ 37 ]  ||  k[ 38 ]  ||  k[ 39 ]  ||  k[ 40 ]
+        case `arrow`: return k[ 37 ] || k[ 38 ] || k[ 39 ] || k[ 40 ]
 
         case `space`: return k[ 32 ]
         case `ctrl`: return k[ 17 ]
@@ -429,12 +460,7 @@ export default class Game {
         case `enter`: return k[ 13 ]
       }
 
-    key = k[ key ]
-
-    if ( newBool != null )
-      k[ key ] = newBool
-
-    return key
+    return k[ key ]
   }
 }
 Game.keys = []

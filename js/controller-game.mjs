@@ -8,7 +8,7 @@ export default class GameController {
     this.jumps = []
     this.newColors = []
     this.piecesPoints = {
-      pawn: 2,
+      pawn: 5,
       rook: 50,
       knight: 25,
       bishop: 40,
@@ -21,6 +21,13 @@ export default class GameController {
       knight: 0,
       bishop: 0,
       queen: 0
+    }
+    this.neededPointsToTransform = {
+      pawn: 0,
+      rook: 1500,
+      knight: 400,
+      bishop: 1000,
+      queen: Infinity
     }
 
     this.chessboardFiller()
@@ -109,7 +116,6 @@ export default class GameController {
     playerController.send( `game-update-scoreboard`, this.scoreboard() )
 
     this.players.set( playerController.id, Object.assign( playerController, player ) )
-    // this.setColor( player.id, { coords:{ x:player.x, y:player.y }, color } )
 
     let chessmanSize = this.chessboard.tileSize * .9
 
@@ -117,6 +123,14 @@ export default class GameController {
       chessmanSize -= 1
 
     playerInitializer( { chessboard:this.chessboard, chessmanSize, player } )
+  }
+
+  transform( id, { x, y, type } ) {
+    const player = this.players.get( id )
+    const points = this.neededPointsToTransform
+
+    if ( type in points && player.scores >= points[ type ] && this.chessboard.transform( type, x, y ) )
+      this.broadcast( `game-transform`, { x, y, type } )
   }
 
   setColor( id, { coords, color } ) {
@@ -157,7 +171,9 @@ export default class GameController {
   }
 
   playerUpdate( id, { from, to } ) {
-    if ( !Color.isEqual( this.players.get( id ).color, this.chessboard.get( from.x, from.y ).entity ) )
+    from.entity = this.chessboard.get( from.x, from.y ).entity
+
+    if ( !Color.isEqual( this.players.get( id ).color, from.entity ) )
       return
 
     const takedField = this.chessboard.move( from, to )
@@ -165,6 +181,11 @@ export default class GameController {
 
     if ( !takedField )
       return
+
+    if ( from.entity.id ) {
+      player.x = from.x
+      player.y = from.y
+    }
 
     player.scores += this.piecesPoints[ takedField.type ] || 0
 

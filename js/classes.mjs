@@ -444,6 +444,29 @@ export default class Chessboard {
       }
   }
 
+  transform( type, x, y ) {
+    const field = this.get( x, y )
+    const king = field.entity
+
+    if ( king.type != `king` || !Color.isEqual( field.color, king.color ) )
+      return false
+
+    for ( let y = -1;  y < 2;  y++ )
+      for ( let x = -1;  x < 2;  x++ ) {
+        const field = this.get( king.x + x, king.y + y )
+        const pawn = field.entity
+
+        if ( pawn && (x || y) && pawn.type == `pawn` && Color.isEqual( field.color, king.color ) && Color.isEqual( pawn, king.color ) ) {
+          x = king.x + x
+          y = king.y + y
+
+          this.remove( x, y )
+          this.setEntity( { type, x, y, color:king.color, movingTimestamp:king.movingTimestamp }, `tex` in king )
+          return true
+        }
+      }
+  }
+
   get( x, y ) {
     return (this.fields[ y ] || [])[ x ] || {}
   }
@@ -462,7 +485,7 @@ export default class Chessboard {
   }
 
   setEntity( entityData, isTextured ) {
-    const { type, x, y, color, movingTimestamp } = entityData
+    const { x, y } = entityData
     let entity = null
 
     if ( entityData instanceof Chessman )
@@ -470,20 +493,13 @@ export default class Chessboard {
     else {
       const entityOnField = this.get( x, y ).entity
 
-      entity = ( () => { switch ( `id` in entityData  ?  `player`  :  type ) {
-        case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
-        case `rook`:   return new Rook(   x, y, color, movingTimestamp )
-        case `knight`: return new Knight( x, y, color, movingTimestamp )
-        case `bishop`: return new Bishop( x, y, color, movingTimestamp )
-        case `king`:   return new King(   x, y, color, movingTimestamp )
-        case `queen`:  return new Queen(  x, y, color, movingTimestamp )
-        case `god`:    return new God(    x, y, color, movingTimestamp )
-        case `player`: return new Player( x, y, color, movingTimestamp )
-      } } )()
+      if ( `id` in entityData )
+        entityData.type = `player`
+
+      entity = Chessboard.getInstance( entityData )
 
       if ( entityOnField || !entity )
         return null
-
       if ( isTextured )
         setTexture`../img/${entity}.png`
       if ( `id` in entityData )
@@ -595,6 +611,19 @@ export default class Chessboard {
 
   isAbove( x, y ) {
     return 0 <= x && x < this.width && 0 <= y && y < this.height
+  }
+
+  static getInstance( { type, x, y, color, movingTimestamp } ) {
+    switch ( type ) {
+      case `pawn`:   return new Pawn(   x, y, color, movingTimestamp )
+      case `rook`:   return new Rook(   x, y, color, movingTimestamp )
+      case `knight`: return new Knight( x, y, color, movingTimestamp )
+      case `bishop`: return new Bishop( x, y, color, movingTimestamp )
+      case `king`:   return new King(   x, y, color, movingTimestamp )
+      case `queen`:  return new Queen(  x, y, color, movingTimestamp )
+      case `god`:    return new God(    x, y, color, movingTimestamp )
+      case `player`: return new Player( x, y, color, movingTimestamp )
+    }
   }
 }
 
