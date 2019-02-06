@@ -100,6 +100,13 @@ export default class GameController {
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {
+    if ( !this.testNickname( nickname ) ) {
+      playerController.send( `chat-new_message`, {
+        data: `You have bad nickname ¯\\_(ツ)_/¯`,
+        type: `server`
+      } )
+      return
+    }
     let color = new Color
 
     while ( !color.r || !color.g || !color.b )
@@ -107,7 +114,7 @@ export default class GameController {
 
     const player = this.spawn( `player`, color )
     if ( !player ) {
-      playerController.send( `game-no_free_space`, this.scoreboard() )
+      playerController.send( `game-no_free_space` )
       return
     }
 

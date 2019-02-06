@@ -44,7 +44,11 @@ export default class PlayerController {
         data.nickname = this.nickname
         data.color = this.color
         this.lastMessagesTimes.push( Date.now() )
-        this.game.broadcast( `chat-new_message`, data )
+        this.game.broadcast( `chat-new_message`, {
+          nickname: this.nickname,
+          color: this.color,
+          data: data.data
+        } )
         break
 
       case `game-nickname`:

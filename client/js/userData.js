@@ -1,5 +1,5 @@
 /** @return {HTMLElement} */
-export default function userData({ data, nickname, color }, element=document.createElement( `div` ) ) {
+export default function userData( { data, nickname, color }, element=document.createElement( `div` ) ) {
   element.classList.add( `user_data` )
 
   if ( nickname ) {

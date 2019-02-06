@@ -23,12 +23,8 @@ export default class Chat {
     const i = this.input
 
     i.onkeydown = e => {
-      if ( e.key === `Enter` && i.value) {
-        ws.send( `chat-new_message`, {
-          type: `standard`,
-          data: i.value
-        } )
-
+      if ( e.key === `Enter` && i.value ) {
+        ws.send( `chat-new_message`, i.value )
         i.value = ``
       }
     }
