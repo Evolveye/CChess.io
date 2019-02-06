@@ -27,14 +27,8 @@ const mimeTypes = {
   mp4: `video/mp4`
 }
 
-
 const staticRoute = {
   classes: `./js/classes.mjs`
-}
-
-const connectionFromOneAddress = {
-  arr: new Map,
-  num: 5
 }
 
 const server = http
@@ -96,7 +90,7 @@ class WssController {
         ws.playerController.eventHandler( type, data )
       }
       ws.onclose = () => {
-        console.log( ws.playerController.nickname )
+        console.log( `close:`, ws.playerController.nickname )
         ws.playerController.eventHandler( `close` )
       }
     } )

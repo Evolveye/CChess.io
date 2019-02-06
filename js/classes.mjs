@@ -199,7 +199,7 @@ class Chessman {
 }
 
 class Pawn extends Chessman {
-  constructor( x, y, color, movingTimestamp=100 ) {
+  constructor( x, y, color, movingTimestamp=250 ) {
     super( x, y, color, movingTimestamp, `pawn` )
   }
 
@@ -335,7 +335,7 @@ class Bishop extends Chessman {
   }
 }
 class Queen extends Chessman {
-  constructor( x, y, color, movingTimestamp=1500 ) {
+  constructor( x, y, color, movingTimestamp=1000 ) {
     super( x, y, color, movingTimestamp, `queen` )
   }
 
@@ -376,8 +376,15 @@ class Queen extends Chessman {
   }
 }
 class King extends Chessman {
-  constructor( x, y, color, movingTimestamp=300 ) {
+  constructor( x, y, color, movingTimestamp=2000 ) {
     super( x, y, color, movingTimestamp, `king` )
+
+    this.transformatingTimestamp = 0
+    this.transformatingTime = 0
+  }
+
+  goodTransformatingtime() {
+    return Date.now() - this.transformatingTimestamp >= this.transformatingTime
   }
 
   /** @param {Chessboard} chessboard (Chess instance).fields */
@@ -454,10 +461,12 @@ export default class Chessboard {
     const field = this.get( x, y )
     const king = field.entity
 
-    console.log( type, x, y, king.color )
+    console.log( `transform`, type, x, y, king.color )
 
     if ( !king || king.type != `king` || !Color.isEqual( field.color, king.color ) )
       return false
+
+    const coords = []
 
     for ( let y = -1;  y < 2;  y++ )
       for ( let x = -1;  x < 2;  x++ ) {
@@ -468,11 +477,26 @@ export default class Chessboard {
           x = king.x + x
           y = king.y + y
 
-          this.remove( x, y )
-          this.setEntity( { type, x, y, color:king.color, movingTimestamp:king.movingTimestamp }, `tex` in king )
-          return true
+          coords.push( { x, y } )
         }
       }
+
+    if ( coords.length && king.goodTransformatingtime() ) {
+      if ( type == `knight` )
+        king.transformatingTime = 1000 * 20
+      if ( type == `bishop` )
+        king.transformatingTime = 1000 * 60
+      if ( type == `rook` )
+        king.transformatingTime = 1000 * 60 * 2
+
+      king.transformatingTimestamp = Date.now()
+
+      const { x, y } = coords[ random( 0, coords.length - 1 ) ]
+      this.remove( x, y )
+      this.setEntity( { type, x, y, color:king.color, movingTimestamp:king.movingTimestamp }, `tex` in king )
+    }
+
+    return true
   }
 
   get( x, y ) {
@@ -600,18 +624,26 @@ export default class Chessboard {
         takedEntity.setTextureColor( chessman.color )
     }
     else {
-      if ( takedEntity && `id` in takedEntity )
+      if ( takedEntity && `id` in takedEntity ) {
         this.removePlayer( takedEntity.color )
-
-      this.remove( from.x, from.y )
+        this.remove( from.x, from.y )
+        this.setEntity( {
+          type: `queen`,
+          x: from.x,
+          y: from.y,
+          color: chessman.color
+        }, `tex` in takedEntity )
+      }
+      else
+        this.remove( from.x, from.y )
     }
 
-    if ( Color.isEqual( to.field.color, `#ffffff` ) )
+    if ( !to.field.color || Color.isEqual( to.field.color, `#ffffff` ) )
       chessman.movingTimestampMultiplier = 1
     else if ( Color.isEqual( to.field.color, chessman.color ) )
-      chessman.movingTimestampMultiplier = .75
+      chessman.movingTimestampMultiplier = .7
     else
-      chessman.movingTimestampMultiplier = 1.25
+      chessman.movingTimestampMultiplier = 1.4
 
     fields[ to.y ][ to.x ].entity = chessman
     chessman.x = to.x

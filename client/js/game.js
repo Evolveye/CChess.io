@@ -117,6 +117,8 @@ export default class Game {
       document.addEventListener( `mousemove`, e  => this.cursorMove( e ) )
     }
 
+    let counter = 0
+
     window.addEventListener(   `resize`,  () => this.resize() )
     document.addEventListener( `keydown`, () => this.keydown() )
 
@@ -158,8 +160,13 @@ export default class Game {
     ws.on( `game-transform`, ( { x, y, type } ) => chessboard.transform( type, x, y ) )
     ws.on( `game-despawn-player`, color => chessboard.removePlayer( color ) )
     ws.on( `game-despawn`, ( { x, y } ) => chessboard.remove( x, y ) )
-    ws.on( `game-spawn`, chessman => chessboard.setEntity( chessman, true ) )
+    ws.on( `game-spawn`, chessman => {
+      counter = 0
+      chessboard.setEntity( chessman, true )
+    } )
     ws.on( `game-update`, ( { jumps, colors } ) => {
+      console.log( counter++ )
+
       colors.forEach( ( { x, y, color } ) => this.chessboard.setColor( x, y, color ) )
       jumps.forEach( ( { from, to } ) => {
         const takedField = chessboard.move( from, to )
@@ -269,14 +276,26 @@ export default class Game {
           ctx.fillText( nickname, eX - width / 2, eY - cSize / 2 )
         }
 
-        if ( !entity.goodTimestamp() ) {
-          const maxWidth = tileSize * .8
-          const width =  maxWidth * (Date.now() - entity.lastJump) / entity.movingTimestamp
+        if ( Color.isEqual( entity.color, this.player.color ) ) {
+          if ( !entity.goodTimestamp() ) {
+            const maxWidth = tileSize * .8
+            const width =  maxWidth * (Date.now() - entity.lastJump) / entity.movingTimestamp
+            const border = 3
 
-          ctx.fillStyle = `#0006`
-          ctx.fillRect( eX - 5 - (maxWidth - 5) / 2, eY - 5 + 15 + cSize / 2, (maxWidth - 5) + 10, 15 + 10 )
-          ctx.fillStyle = `#fff`
-          ctx.fillRect( eX - (maxWidth - 5) / 2, eY + 15 + cSize / 2, width, 15 )
+            ctx.fillStyle = `#0006`
+            ctx.fillRect( eX - maxWidth / 2 - border, eY + cSize / 2 - border + 5, maxWidth + border * 2, 15 + border * 2 )
+            ctx.fillStyle = `#fff`
+            ctx.fillRect( eX - maxWidth / 2, eY + cSize / 2 + 5, width, 15 )
+          }
+          if ( entity.type == `king` && !entity.goodTransformatingtime() ) {
+            const barWidth = 300
+            const width = 300 * (Date.now() - entity.transformatingTimestamp) / entity.transformatingTime
+
+            ctx.fillStyle = `#0006`
+            ctx.fillRect( ctx.canvas.width / 2 - barWidth / 2 - 2, ctx.canvas.height - 8, barWidth, 6 )
+            ctx.fillStyle = `#fff`
+            ctx.fillRect( ctx.canvas.width / 2 - barWidth / 2, ctx.canvas.height - 6, width, 2 )
+          }
         }
       }
   }
