@@ -25,7 +25,7 @@ export default class GameController {
     this.neededPointsToTransform = {
       // pawn: 0,
       rook: 1500,
-      knight: 5,
+      knight: 500,
       bishop: 1000,
       // queen: Infinity
     }
