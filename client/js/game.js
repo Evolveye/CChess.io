@@ -123,12 +123,29 @@ export default class Game {
     ws.on( `game-scoreboard`, scoreboard => {
       this.ui.scoreboard.innerHTML = ``
 
-      for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
+      scoreboard.sort( (a, b) => b.data - a.data )
+
+      let playerInTop = false
+      for ( let i = 0;  i < 10 && i < scoreboard.length;  i++ ) {
+        const field = scoreboard[ i ]
+        this.ui.scoreboard.appendChild( userData( field ) )
+
         if ( field.nickname == player.nickname )
+          playerInTop = true
+      }
+
+
+      for ( const field of scoreboard )
+        if ( field.nickname == player.nickname ) {
           player.scores = field.data
 
-        this.ui.scoreboard.appendChild( userData( field ) )
-      }
+          if ( !playerInTop ) {
+            this.ui.scoreboard.innerHTML += `<hr>`
+            this.ui.scoreboard.appendChild( userData( field ) )
+          }
+
+          break
+        }
 
       info.fieldsToCapture.textContent = `Fields to capture: ${player.fieldsToCapture}`
 
