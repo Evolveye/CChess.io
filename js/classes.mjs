@@ -95,6 +95,7 @@ export class Color {
     return `${this.getTxtFormat( entityA )}` == `${this.getTxtFormat( entityB )}`
   }
 }
+
 class Chessman {
   constructor( x, y, color, movingTimestamp=1000, type ) {
     this.x = x

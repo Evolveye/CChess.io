@@ -97,7 +97,7 @@ export default class GameController {
       y = random( 0, cb.height )
     } while ( cb.get( x, y ).entity )
 
-    return cb.setEntity( { type, x, y, color, movingTimestamp:150 } )
+    return cb.setEntity( { type, x, y, color, movingTimestamp:500 } )
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {

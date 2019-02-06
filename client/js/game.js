@@ -118,7 +118,7 @@ export default class Game {
 
     window.addEventListener(   `resize`,  () => this.resize() )
     document.addEventListener( `keydown`, () => this.keydown() )
-    ws.on( `game-update-scoreboard`, scoreboard => {
+    ws.on( `game-scoreboard`, scoreboard => {
       this.ui.scoreboard.innerHTML = ``
 
       for ( const field of scoreboard.sort( (a, b) => b.data - a.data ) ) {
@@ -194,7 +194,7 @@ export default class Game {
       for ( let x = 0;  x < width;  x++ ) {
         const field = this.chessboard.get( x, y )
 
-        if ( field.color && !Color.isEqual( field.color, `#ffffff` )) {
+        if ( field.color && !Color.isEqual( field.color, `#ffffff` ) ) {
           ctx.fillStyle = field.color
           ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
 
@@ -246,6 +246,16 @@ export default class Game {
           ctx.fillRect( eX - 5 - width / 2, eY - 5 - 15 - cSize / 2, width + 10, 15 + 10 )
           ctx.fillStyle = `#fff`
           ctx.fillText( nickname, eX - width / 2, eY - cSize / 2 )
+        }
+
+        if ( !entity.goodTimestamp() ) {
+          const maxWidth = tileSize * .8
+          const width =  maxWidth * (Date.now() - entity.lastJump) / entity.movingTimestamp
+
+          ctx.fillStyle = `#0006`
+          ctx.fillRect( eX - 5 - (maxWidth - 5) / 2, eY - 5 + 15 + cSize / 2, (maxWidth - 5) + 10, 15 + 10 )
+          ctx.fillStyle = `#fff`
+          ctx.fillRect( eX - (maxWidth - 5) / 2, eY + 15 + cSize / 2, width, 15 )
         }
       }
   }
