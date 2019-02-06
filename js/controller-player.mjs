@@ -23,7 +23,7 @@ export default class PlayerController {
   eventHandler( type, data ) {
     switch ( type ) {
       case `chat-new_message`:
-        if ( data.data.length > 127 ) {
+        if ( data.length > 127 ) {
           this.send( `chat-new_message`, {
             type: `user_info`,
             data: `Too long message!`
@@ -41,13 +41,11 @@ export default class PlayerController {
 
           this.lastMessagesTimes.shift()
         }
-        data.nickname = this.nickname
-        data.color = this.color
         this.lastMessagesTimes.push( Date.now() )
         this.game.broadcast( `chat-new_message`, {
           nickname: this.nickname,
           color: this.color,
-          data: data.data
+          data
         } )
         break
 
