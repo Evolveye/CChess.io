@@ -103,6 +103,7 @@ class Chessman {
     this.spawnTime = Date.now()
     this.spawnProtection = 0
     this.color = new Color( color || `#ffffff` )
+    this.basicMovingTimestamp = movingTimestamp
     this.movingTimestamp = movingTimestamp
     this.lastJump = 0
     this.type = type
@@ -136,6 +137,10 @@ class Chessman {
    */
   availableFields( chessboard ) {
     throw `You have to override me!`
+  }
+
+  set movingTimestampMultiplier( multiplier ) {
+    this.movingTimestamp = this.basicMovingTimestamp * multiplier
   }
 
   static movingLoopLogic( data, chessboard, chessman, x, y ) {
@@ -233,7 +238,7 @@ class Pawn extends Chessman {
   }
 }
 class Rook extends Chessman {
-  constructor( x, y, color, movingTimestamp=250 ) {
+  constructor( x, y, color, movingTimestamp=1500 ) {
     super( x, y, color, movingTimestamp, `rook` )
   }
 
@@ -267,7 +272,7 @@ class Rook extends Chessman {
   }
 }
 class Knight extends Chessman {
-  constructor( x, y, color, movingTimestamp=750 ) {
+  constructor( x, y, color, movingTimestamp=300 ) {
     super( x, y, color, movingTimestamp, `knight` )
   }
 
@@ -301,7 +306,7 @@ class Knight extends Chessman {
   }
 }
 class Bishop extends Chessman {
-  constructor( x, y, color, movingTimestamp=500 ) {
+  constructor( x, y, color, movingTimestamp=1000 ) {
     super( x, y, color, movingTimestamp, `bishop` )
   }
 
@@ -330,7 +335,7 @@ class Bishop extends Chessman {
   }
 }
 class Queen extends Chessman {
-  constructor( x, y, color, movingTimestamp=1000 ) {
+  constructor( x, y, color, movingTimestamp=1500 ) {
     super( x, y, color, movingTimestamp, `queen` )
   }
 
@@ -371,7 +376,7 @@ class Queen extends Chessman {
   }
 }
 class King extends Chessman {
-  constructor( x, y, color, movingTimestamp=250 ) {
+  constructor( x, y, color, movingTimestamp=300 ) {
     super( x, y, color, movingTimestamp, `king` )
   }
 
@@ -572,36 +577,46 @@ export default class Chessboard {
   }
 
   move( from, to ) {
+    from.field = this.get( from.x, from.y )
+    to.field = this.get( to.x, to.y )
+
     const fields = this.fields
-    const chessman = this.get( from.x, from.y ).entity
-    const nextField = this.get( to.x, to.y ).entity
+    const chessman = from.field.entity
+    const takedEntity = to.field.entity
 
     if ( !this.checkJump( from, to ) )
       return false
 
-    if ( nextField && Color.isEqual( nextField, `#ffffff` ) ) {
-      fields[ from.y ][ from.x ].entity = nextField
-      nextField.x = from.x
-      nextField.y = from.y
-      nextField.lastJump = Date.now()
-      nextField.color = chessman.color
+    if ( takedEntity && Color.isEqual( takedEntity, `#ffffff` ) ) {
+      fields[ from.y ][ from.x ].entity = takedEntity
+      takedEntity.x = from.x
+      takedEntity.y = from.y
+      takedEntity.lastJump = Date.now()
+      takedEntity.color = chessman.color
 
-      if ( `setTextureColor` in nextField )
-        nextField.setTextureColor( chessman.color )
+      if ( `setTextureColor` in takedEntity )
+        takedEntity.setTextureColor( chessman.color )
     }
     else {
-      if ( nextField && `id` in nextField )
-        this.removePlayer( nextField.color )
+      if ( takedEntity && `id` in takedEntity )
+        this.removePlayer( takedEntity.color )
 
       this.remove( from.x, from.y )
     }
+
+    if ( Color.isEqual( to.field.color, `#ffffff` ) )
+      chessman.movingTimestampMultiplier = 1
+    else if ( Color.isEqual( to.field.color, chessman.color ) )
+      chessman.movingTimestampMultiplier = .75
+    else
+      chessman.movingTimestampMultiplier = 1.25
 
     fields[ to.y ][ to.x ].entity = chessman
     chessman.x = to.x
     chessman.y = to.y
     chessman.lastJump = Date.now()
 
-    return nextField || true
+    return takedEntity || true
   }
 
   isABeatableField( x, y, entity ) {
