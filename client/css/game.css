@@ -93,8 +93,8 @@
 .game .minimap {
   right: 10px;
   bottom: 10px;
-  width: 100px;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   border: 1px solid var( --color-bgr-dark );
   background-color: #fff;
 }

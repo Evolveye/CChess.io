@@ -35,6 +35,7 @@ export default class Game {
       canvas: this.box.querySelector( `.canvas-main` ),
       chat: new Chat( this.box.querySelector( `.chat` ) ),
       scoreboard: this.box.querySelector( `.scoreboard-fields` ),
+      minimap: this.box.querySelector( `.minimap` ),
       transform: {
         knight: this.box.querySelector( `.is-knight` ),
         bishop: this.box.querySelector( `.is-bishop` ),
@@ -45,8 +46,12 @@ export default class Game {
         ping: this.box.querySelector( `.info-ping` )
       },
     }
+
     /** @type {CanvasRenderingContext2D} */
     this.ctx = this.ui.canvas.getContext( `2d` )
+    /** @type {CanvasRenderingContext2D} */
+    this.miniCtx = this.ui.minimap.getContext( `2d` )
+
     this.ws = ws
     this.ping = Date.now()
     this.mode = `game`
@@ -61,8 +66,6 @@ export default class Game {
       x: null,
       y: null,
     }
-
-    this.resize()
 
     ws.onclose( () => {
       this.mode = `disconnected`
@@ -83,12 +86,12 @@ export default class Game {
     this.chessmanSize = chessmanSize
     this.chessboard = new Chessboard( width, height, tileSize, fields, true )
     this.player = this.chessboard.get( player.x, player.y ).entity
+    this.cameraInit()
+    this.resize()
 
     info.ping.textContent = `Ping: ${Date.now() - this.ping}ms`
     chessboard = this.chessboard
     player = this.player
-
-    this.cameraInit()
 
     setInterval( () => {
       this.logic()
@@ -351,9 +354,14 @@ export default class Game {
       for ( let x = 0;  x < width;  x++ ) {
         const field = this.chessboard.get( x, y )
 
-        if ( field.color ) {
+        if ( field.color && !Color.isEqual( field.color, `#ffffff` )) {
           ctx.fillStyle = field.color
           ctx.fillRect( c.x + x * tileSize, c.y + y * tileSize, tileSize, tileSize )
+
+          if ( Color.isEqual( field.color, this.player.color ) ) {
+            this.miniCtx.fillStyle = field.color
+            this.miniCtx.fillRect( x * 2, y * 2, 2, 2 )
+          }
         }
         if ( (y + x) % 2 ) {
           ctx.fillStyle = `#0001`
@@ -426,6 +434,7 @@ export default class Game {
 
   resize() {
     const ctx = this.ctx
+    const miniCtx = this.miniCtx
 
     ctx.canvas.width = window.innerWidth
     ctx.canvas.height = window.innerHeight
@@ -434,9 +443,10 @@ export default class Game {
     ctx.font = `15px monospace`
     ctx.lineWidth = 5
 
-    ctx.fillStyle = `#843737`
-    ctx.strokeStyle = `blck`
-    ctx.fillRect( 0, 0, ctx.canvas.width, ctx.canvas.height )
+    miniCtx.fillStyle = `${this.player.color}`
+    miniCtx.imageSmoothingEnabled = false
+    miniCtx.canvas.width = this.chessboard.width * 2
+    miniCtx.canvas.height = this.chessboard.height * 2
   }
 
   end() {
