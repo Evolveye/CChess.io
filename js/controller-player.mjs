@@ -23,15 +23,15 @@ export default class PlayerController {
   eventHandler( type, data ) {
     switch ( type ) {
       case `chat-new_message`:
-        if ( data.length > 127 ) {
+        if ( data.data.length > 127 ) {
           this.send( `chat-new_message`, {
             type: `user_info`,
             data: `Too long message!`
           } )
           break
         }
-        if ( this.lastMessagesTimes.length == 3 ) {
-          if ( this.lastMessagesTimes[ 0 ] + 1000 * 5 > Date.now() ) {
+        if ( this.lastMessagesTimes.length == 4 ) {
+          if ( this.lastMessagesTimes[ 0 ] + 1000 * 10 > Date.now() ) {
             this.send( `chat-new_message`, {
               type: `user_info`,
               data: `You want to send messages too fast!`
