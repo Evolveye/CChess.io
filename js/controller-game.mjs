@@ -206,7 +206,7 @@ export default class GameController {
       ++player.fieldsToCapture
 
     if ( takedField.id && this.players.has( takedField.id ) ) {
-      player.scores += this.players.get( takedField.id ).scores ** 1.8 ** .5
+      player.scores += Math.floor( this.players.get( takedField.id ).scores ** 1.8 ** .5 )
       this.players.delete( takedField.id )
     }
   }
