@@ -1,9 +1,9 @@
 :root {
   --color-main: #a52a2a;
   --color-bgr-dark: #0006;
-  --color-info-neutral: #00f4;
-  --color-info-good: #0f04;
-  --color-info-dab: #f004;
+  --color-info-neutral: #00f6;
+  --color-info-good: #0f06;
+  --color-info-dab: #f006;
 }
 body {
   overflow: hidden;

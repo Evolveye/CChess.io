@@ -16,7 +16,7 @@ export default class GameController {
       king: 300
     }
     this.chessPiecesOnMap = {
-      pawn: 700,
+      pawn: 1000,
       rook: 0,
       knight: 0,
       bishop: 0,

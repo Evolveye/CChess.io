@@ -9,19 +9,25 @@ export default class Game {
     this.box.innerHTML = /* html */ `
       <canvas class="canvas-main"></canvas>
 
+      <section class="chat"></section>
+
+      <section class="transform">
+        <div class="transform-knight"></div>
+        <div class="transform-bishop"></div>
+        <div class="transform-rook"></div>
+      </section>
+
       <section class="scoreboard">
         <h3>Scoreboard</h3>
         <div class="scoreboard-fields"></div>
       </section>
 
-      <section class="chat"></section>
+      <div class="version">Approximate v: Alpha 1.0</div>
 
       <div class="stats">
         <div class="stats-fieldsToCapture"></div>
         <div class="stats-ping"></div>
       </div>
-
-      <div class="version">Approximate v: Alpha 1.0</div>
     `
 
     /** @type {HTMLCanvasElement} */
@@ -151,7 +157,7 @@ export default class Game {
 
         if ( takedField.id === player.id )
           this.end()
-        else if ( takedField.type == `pawn` )
+        else if ( Color.isEqual( takedField.color, player.color) && takedField.type == `pawn` )
           ++player.fieldsToCapture
       } )
     } )
