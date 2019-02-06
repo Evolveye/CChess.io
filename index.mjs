@@ -26,8 +26,15 @@ const mimeTypes = {
   wav: `audio/wav`,
   mp4: `video/mp4`
 }
+
+
 const staticRoute = {
   classes: `./js/classes.mjs`
+}
+
+const connectionFromOneAddress = {
+  arr: new Map,
+  num: 5
 }
 
 const server = http
@@ -77,6 +84,7 @@ class WssController {
     this.gameController = new GameController( this )
 
     wss.on( `connection`, ws => {
+      // console.log( Object.keys( ws._sender ) )
       ws.playerController = new PlayerController( this.gameController, ws, wss )
 
       ws.onmessage = e => {
