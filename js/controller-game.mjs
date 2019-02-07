@@ -131,6 +131,7 @@ export default class GameController {
     if ( !(chessmanSize % 2) )
       chessmanSize -= 1
 
+    console.log( `new player:`, nickname )
     playerInitializer( {
       neededPointsToTransform: this.neededPointsToTransform,
       chessboard: this.chessboard,
