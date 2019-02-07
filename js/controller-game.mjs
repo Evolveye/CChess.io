@@ -25,9 +25,9 @@ export default class GameController {
     this.neededPointsToTransform = {
       // pawn: 0,
       rook: 1500,
-      knight: 5,
+      knight: 500,
       bishop: 1000,
-      // queen: Infinity
+      queen: 750
     }
 
     this.chessboardFiller()
@@ -80,7 +80,6 @@ export default class GameController {
           --chessPieces[ entity.type ]
       }
 
-
     for ( const chessPiece in this.chessPiecesOnMap )
       for ( let i = chessPieces[ chessPiece ];  i > 0;  i-- )
         this.wssController.broadcast( `game-spawn`, this.spawn( chessPiece ) )
@@ -88,15 +87,14 @@ export default class GameController {
 
   spawn( type, color=null ) {
     const cb = this.chessboard
-    let chances = 100
-    let x, y
+    const availableFields = cb.availableFields()
 
-    do {
-      x = random( 0, cb.width )
-      y = random( 0, cb.height )
-    } while ( chances-- && cb.get( x, y ).entity )
+    if ( !availableFields.length )
+      return null
 
-    return chances  ?  cb.setEntity( { type, x, y, color } )  :  null
+    const { x, y } = availableFields[ random( 0, availableFields.length - 1 ) ]
+
+    return cb.setEntity( { type, x, y, color } )
   }
 
   spawnPlayer( playerController, nickname, playerInitializer ) {

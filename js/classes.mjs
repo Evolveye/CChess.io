@@ -335,7 +335,7 @@ class Bishop extends Chessman {
   }
 }
 class Queen extends Chessman {
-  constructor( x, y, color, movingTimestamp=1000 ) {
+  constructor( x, y, color, movingTimestamp=1500 ) {
     super( x, y, color, movingTimestamp, `queen` )
   }
 
@@ -376,7 +376,7 @@ class Queen extends Chessman {
   }
 }
 class King extends Chessman {
-  constructor( x, y, color, movingTimestamp=2000 ) {
+  constructor( x, y, color, movingTimestamp=1500 ) {
     super( x, y, color, movingTimestamp, `king` )
 
     this.transformatingTimestamp = 0
@@ -674,6 +674,21 @@ export default class Chessboard {
     chessman.lastJump = Date.now()
 
     return takedEntity || true
+  }
+
+  availableFields() {
+    const fields = []
+    const { width, height } = this
+
+    for ( let y = 0;  y < height;  y++ )
+      for ( let x = 0;  x < width;  x++ ) {
+        const field = this.get( x, y )
+
+        if ( (!field.color || Color.isEqual( field.color, `#ffffff` )) && !field.entity )
+          fields.push( { x, y } )
+      }
+
+    return fields
   }
 
   isABeatableField( x, y, entity ) {
