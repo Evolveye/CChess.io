@@ -457,42 +457,69 @@ export default class Chessboard {
       }
   }
 
-  transform( type, x, y ) {
-    const field = this.get( x, y )
+  transform( type, kingX, kingY ) {
+    const field = this.get( kingX, kingY )
     const king = field.entity
 
-    console.log( `transform`, type, x, y, king.color )
+    console.log( `transform`, type, kingX, kingY )
 
-    if ( !king || king.type != `king` || !Color.isEqual( field.color, king.color ) )
+    if ( !king || king.type != `king` || !king.goodTransformatingtime() || !Color.isEqual( field.color, king.color ) )
       return false
 
-    const coords = []
+    const coords = new Map( [
+      [ `pawn`, [] ],
+      [ `knight`, [] ],
+      [ `bishop`, [] ],
+      [ `rook`, [] ],
+      [ `queen`, [] ],
+      [ `king`, [] ]
+    ] )
 
     for ( let y = -1;  y < 2;  y++ )
       for ( let x = -1;  x < 2;  x++ ) {
         const field = this.get( king.x + x, king.y + y )
-        const pawn = field.entity
+        const { entity } = field
 
-        if ( pawn && (x || y) && pawn.type == `pawn` && Color.isEqual( field.color, king.color ) && Color.isEqual( pawn, king.color ) )
-          coords.push( { x:(king.x + x), y:(king.y + y) } )
+        if ( entity && (x || y) && Color.isEqual( field.color, king.color ) && Color.isEqual( entity, king.color ) )
+          coords.get( entity.type ).push( { x:(king.x + x), y:(king.y + y) } )
       }
 
-    if ( coords.length && king.goodTransformatingtime() ) {
-      if ( type == `knight` )
-        king.transformatingTime = 1000 * 20
-      if ( type == `bishop` )
-        king.transformatingTime = 1000 * 60
-      if ( type == `rook` )
-        king.transformatingTime = 1000 * 60 * 2
+    if ( !coords )
+      return false
 
-      king.transformatingTimestamp = Date.now()
+    const { x, y } = this.transformator( type, king, coords )
 
-      const { x, y } = coords[ random( 0, coords.length - 1 ) ]
-      this.remove( x, y )
-      this.setEntity( { type, x, y, color:king.color, movingTimestamp:king.movingTimestamp }, `tex` in king )
-    }
+    if ( !x || !y )
+      return false
+
+    king.transformatingTimestamp = Date.now()
+
+    this.remove( x, y )
+    this.setEntity( { type, x, y, color:king.color }, `tex` in king )
 
     return true
+
+  }
+
+  transformator( type, king, coords ) {
+    let arr
+
+    switch ( type ) {
+      case `knight`:
+        king.transformatingTime = 1000 * 20
+        arr = coords.get( `pawn` )
+        return arr[ random( 0, arr.length - 1 ) ]
+
+      case `bishop`:
+        king.transformatingTime = 1000 * 60
+        arr = coords.get( `pawn` )
+        return arr[ random( 0, arr.length - 1 ) ]
+
+      case `rook`:
+        king.transformatingTime = 1000 * 60 * 2
+        arr = coords.get( `pawn` )
+        return arr[ random( 0, arr.length - 1 ) ]
+    }
   }
 
   get( x, y ) {
