@@ -473,12 +473,8 @@ export default class Chessboard {
         const field = this.get( king.x + x, king.y + y )
         const pawn = field.entity
 
-        if ( pawn && (x || y) && pawn.type == `pawn` && Color.isEqual( field.color, king.color ) && Color.isEqual( pawn, king.color ) ) {
-          x = king.x + x
-          y = king.y + y
-
-          coords.push( { x, y } )
-        }
+        if ( pawn && (x || y) && pawn.type == `pawn` && Color.isEqual( field.color, king.color ) && Color.isEqual( pawn, king.color ) )
+          coords.push( { x:(king.x + x), y:(king.y + y) } )
       }
 
     if ( coords.length && king.goodTransformatingtime() ) {
