@@ -1,5 +1,3 @@
-"use script"
-
 import http from "http"
 import fs from "fs"
 import WebSocket from "ws"
