@@ -1,4 +1,4 @@
-import Chessboard, { random, Color } from "./classes.mjs"
+import Chessboard, { random, Color } from "./gameCore.mjs"
 
 export default class GameController {
   constructor( wssController ) {

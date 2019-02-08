@@ -7,65 +7,90 @@ import WebSocket from "ws"
 import GameController from "./js/controller-game.mjs"
 import PlayerController from "./js/controller-player.mjs"
 
-const port = process.env.PORT || 80
-const mimeTypes = {
-  html: `text/html`,
-  css: `text/css`,
-  js: `text/javascript`,
-  mjs: `application/javascript`,
-  json: `application/json`,
-  woff: `application/font-woff`,
-  ttf: `application/font-ttf`,
-  eot: `application/vnd.ms-fontobject`,
-  otf: `application/font-otf`,
-  svg: `application/image/svg+xml`,
-  ico: `image/x-icon`,
-  png: `image/png`,
-  jpg: `image/jpg`,
-  gif: `image/gif`,
-  wav: `audio/wav`,
-  mp4: `video/mp4`
-}
-
-const staticRoute = {
-  classes: `./js/classes.mjs`
-}
-
-const server = http
-  .createServer( (req, res) => {
-    let log = `${req.method} ${req.url}`
-
-    while ( log.length < 20 )
-      log += ` `
-
-    // process.stdout.write( `${log}|   ` )
-
-    if ( req.method == `GET` ) {
-      let file = null
-      let address
-
-      if ( req.url.charAt( 1 ) == `$` )
-        address = staticRoute[ req.url.slice( 3 ) ]
-      else
-        address = `./client${req.url == `/`  ?  `/index.html`  :  req.url}`
-
-      // process.stdout.write( `address: ${address}   ` )
-      let mimeType = mimeTypes[ address.split( /.*\./ )[ 1 ] ]
-      // process.stdout.write( `mimeType: ${mimeType}   ` )
-
-      if ( fs.existsSync( address ) ) {
-        file = fs.readFileSync( address )
-        res.writeHead( 200, { "Content-Type":mimeType } )
-      }
-      else
-        res.writeHead( 404 )
-
-      // process.stdout.write( `statusCode:${res.statusCode}\n` )
-
-      res.end( file )
+class Server {
+  constructor() {
+    this.port = process.env.PORT || 80
+    this.connections = new Map
+    this.mimeTypes = {
+      html: `text/html`,
+      css: `text/css`,
+      js: `text/javascript`,
+      mjs: `application/javascript`,
+      json: `application/json`,
+      woff: `application/font-woff`,
+      ttf: `application/font-ttf`,
+      eot: `application/vnd.ms-fontobject`,
+      otf: `application/font-otf`,
+      svg: `application/image/svg+xml`,
+      ico: `image/x-icon`,
+      png: `image/png`,
+      jpg: `image/jpg`,
+      gif: `image/gif`,
+      wav: `audio/wav`,
+      mp4: `video/mp4`
     }
-  } )
-  .listen( port )
+    this.staticRoute = {
+      gameCore: `./js/gameCore.mjs`
+    }
+    this.instance = http
+      .createServer( (req, res) => {
+        const path = this.buildPath( req.url )
+
+        if ( !this.checkIp( path, req.connection.remoteAddress ) )
+          this.send404( res )
+
+        if ( fs.existsSync( path ) ) {
+          res.writeHead( 200, { "Content-Type":this.mimeTypes[ path.split( /.*\./ )[ 1 ] ] } )
+          res.end( fs.readFileSync( path ) )
+        }
+        else
+          this.send404( res )
+
+      } )
+      .listen( this.port, () => console.log( `\nServer started on port ${this.port}\n`) )
+  }
+
+  checkIp( /* path, address* */ ) {
+
+    /**
+     * That methos is not good.
+     * I know - address != PC
+     *   but i don't know how can I make multiwebsocket connections from 1 PC
+     */
+
+    // Unfinished functionality:
+    //
+    // const cxn = this.connections
+    // if ( path == `./client/index.html` ) {
+    //   if ( !cxn.has( address ) )
+    //     cxn.set( address, 0 )
+    //
+    //   const clientCxn = cxn.get( address )
+    //
+    //   if ( clientCxn > 10 )
+    //     return false
+    //
+    //   cxn.set( address, cxn.get( address ) + 1 )
+    // }
+
+    return true
+  }
+
+  buildPath( url ) {
+    const varRegexp = /\$([a-z0-9]+)/i
+    const varInUrl = url.match( varRegexp )
+
+    if ( varInUrl && varInUrl[ 1 ] in this.staticRoute )
+      return this.staticRoute[ varInUrl[ 1 ] ]
+
+    return `./client${url == `/`  ?  `/index.html`  :  url}`
+  }
+
+  send404( res, reason ) {
+    res.writeHead( 404 )
+    res.end()
+  }
+}
 
 class WssController {
   /**
@@ -110,6 +135,4 @@ class WssController {
   }
 }
 
-new WssController( new WebSocket.Server( { server } ) )
-
-console.log( `\nServer started on port ${port}\n`)
+new WssController( new WebSocket.Server( { server:(new Server).instance } ) )

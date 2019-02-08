@@ -24,7 +24,7 @@ class Chessman {
     ctx.drawImage( t, 0, 0 )
 
     let imgData = ctx.getImageData( 0, 0, t.width, t.height )
-    
+
     for ( let y = 0;  y < imgData.height;  y++ )
       for ( let x = 0;  x < imgData.width * 4;  x += 4  ) {
         const pixelStart = y * imgData.width * 4 + x + 0

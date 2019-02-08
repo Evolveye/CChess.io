@@ -1,5 +1,5 @@
 import ws from "./ws.js"
-import Chessboard, { Color, setTexture } from "/$/classes"
+import Chessboard, { Color } from "./$gameCore"
 import Chat from "./chat.js"
 import userData from "./userData.js"
 
