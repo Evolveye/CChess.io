@@ -48,9 +48,9 @@ export default class Game {
     }
 
     /** @type {CanvasRenderingContext2D} */
-    this.ctx = this.ui.canvas.getContext( `2d` )
+    this.ctx = this.ui.canvas.getContext( `2d`, { alpha:false } )
     /** @type {CanvasRenderingContext2D} */
-    this.miniCtx = this.ui.minimap.getContext( `2d` )
+    this.miniCtx = this.ui.minimap.getContext( `2d`, { alpha:false } )
 
     this.ws = ws
     this.ping = Date.now()
@@ -492,10 +492,12 @@ export default class Game {
     ctx.font = `15px monospace`
     ctx.lineWidth = 5
 
-    miniCtx.fillStyle = `${this.player.color}`
-    miniCtx.imageSmoothingEnabled = false
     miniCtx.canvas.width = this.chessboard.width * 2
     miniCtx.canvas.height = this.chessboard.height * 2
+    miniCtx.imageSmoothingEnabled = false
+    miniCtx.fillStyle = `#ffffff`
+    miniCtx.fillRect( 0, 0, miniCtx.canvas.width, miniCtx.canvas.height )
+    miniCtx.fillStyle = `${this.player.color}`
   }
 
   end() {
