@@ -100,12 +100,16 @@ class Chessman {
   constructor( x, y, color, movingTimestamp=1000, type ) {
     this.x = x
     this.y = y
+    this.jumpingPos = { x, y }
+
     this.spawnTime = Date.now()
     this.spawnProtection = 0
-    this.color = new Color( color || `#ffffff` )
+
     this.basicMovingTimestamp = movingTimestamp
     this.movingTimestamp = movingTimestamp
     this.lastJump = 0
+
+    this.color = new Color( color || `#ffffff` )
     this.type = type
   }
 
@@ -437,14 +441,27 @@ class Player extends King {
   }
 }
 
+class Field {
+  constructor( color=`#000000` ) {
+    this.color = new Color( color )
+    /** @type {Chessman|Pawn|Rook|Knight|Bishop|Queen|King|God|Player} */
+    this.entity = {}
+  }
+}
 export default class Chessboard {
+  /**
+   * @param {Number} width Chessboard width
+   * @param {Number} height Chessboard height
+   * @param {Number} tileSize Chessboard tile size
+   * @param {{ color:Color entity:Chessman }[][]} fields Initial chessboard fields
+   * @param {Boolean} isTextured Do entities are textured? (Do instance is created on client side?)
+   */
   constructor( width, height, tileSize, fields=[], isTextured ) {
     this.width = width
     this.height = height
     this.tileSize = tileSize
 
-    /** @type {Chessman[][]} */
-    this.fields = [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => ({ color:null, entity:null }) ) )
+    this.fields = [ ...Array( height ) ].map( () => [ ...Array( width ) ].map( () => new Field ) )
 
     for ( let y = 0;  y < height;  y++ )
       for ( let x = 0;  x < width;  x++ ) {
