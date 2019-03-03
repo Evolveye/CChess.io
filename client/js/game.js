@@ -1,5 +1,5 @@
 import ws from "./ws.js"
-import Chessboard, { Color } from "./$gameCore"
+import Chessboard, { Color } from "/server/gameCore"
 import Chat from "./chat.js"
 import userData from "./userData.js"
 
@@ -27,7 +27,7 @@ export default class Game {
       <div class="info">
         <div class="info-fieldsToCapture"></div>
         <div class="info-ping"></div>
-        <div class="info-version">Approximate v: Alpha 1.5</div>
+        <div class="info-version">Approximate v: Alpha 1.6</div>
       </div>
     `
 

@@ -4,10 +4,10 @@ const ws = new WebSocket( `${loc.protocol === `https:`  ?  `wss`  :  `ws`}:/${lo
 const messagehandlers = new Map
 
 ws.onmessage = e => {
-  const { type, data } = JSON.parse( e.data )
+  const { event, data } = JSON.parse( e.data )
 
-  if ( messagehandlers.has( type ) )
-    messagehandlers.get( type )( data )
+  if ( messagehandlers.has( event ) )
+    messagehandlers.get( event )( data )
 }
 
 const queque = {
@@ -32,15 +32,15 @@ const queque = {
 }
 
 const socket = {
-  send( type, data ) {
+  send( event, data ) {
     if ( queque.ready )
-      ws.send( JSON.stringify( { type, data } ) )
+      ws.send( JSON.stringify( { event, data } ) )
     else
-      queque.push( this.send, type, data )
+      queque.push( this.send, event, data )
   },
 
-  on( type, func ) {
-    messagehandlers.set( type, func )
+  on( event, func ) {
+    messagehandlers.set( event, func )
   },
 
   changeRoom( roomName ) {
@@ -60,7 +60,5 @@ const socket = {
 }
 
 queque.run()
-
-socket.changeRoom( `chess-standard` )
 
 export default socket

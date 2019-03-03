@@ -1,8 +1,8 @@
 import Chessboard, { random, Color } from "./gameCore.mjs"
 
 export default class GameController {
-  constructor( wssController ) {
-    this.wssController = wssController
+  constructor( server ) {
+    this.server = server
     this.players = new Map
     this.chessboard = new Chessboard( 70, 70, 60 )
     this.jumps = []
@@ -37,7 +37,7 @@ export default class GameController {
       if ( !this.jumps.length && !this.newColors.length )
         return
 
-      wssController.broadcast( `game-update`, { jumps:this.jumps, colors:this.newColors } )
+        server.broadcast( `game-update`, { jumps:this.jumps, colors:this.newColors } )
       this.jumps = []
       this.newColors = []
     }, 1000 / 60 )
@@ -82,7 +82,7 @@ export default class GameController {
 
     for ( const chessPiece in this.chessPiecesOnMap )
       for ( let i = chessPieces[ chessPiece ];  i > 0;  i-- )
-        this.wssController.broadcast( `game-spawn`, this.spawn( chessPiece ) )
+        this.server.broadcast( `game-spawn`, this.spawn( chessPiece ) )
   }
 
   spawn( type, color=null ) {
@@ -111,6 +111,7 @@ export default class GameController {
       color = new Color
 
     const player = this.spawn( `player`, color )
+
     if ( !player ) {
       playerController.send( `game-no_free_space` )
       return
@@ -131,7 +132,7 @@ export default class GameController {
     if ( !(chessmanSize % 2) )
       chessmanSize -= 1
 
-    console.log( `new player:`, nickname )
+    console.log( `New player: "${nickname}"` )
     playerInitializer( {
       neededPointsToTransform: this.neededPointsToTransform,
       chessboard: this.chessboard,
@@ -215,7 +216,7 @@ export default class GameController {
     }
   }
 
-  broadcast( type, data ) {
-    this.wssController.broadcast( type, data )
+  broadcast( event, data ) {
+    this.server.broadcast( event, data )
   }
 }

@@ -442,12 +442,13 @@ class Player extends King {
 }
 
 class Field {
-  constructor( color=`#000000` ) {
+  constructor( color=`#ffffff` ) {
     this.color = new Color( color )
     /** @type {Chessman|Pawn|Rook|Knight|Bishop|Queen|King|God|Player} */
-    this.entity = {}
+    this.entity = null
   }
 }
+
 export default class Chessboard {
   /**
    * @param {Number} width Chessboard width

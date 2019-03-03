@@ -1,27 +1,27 @@
 export default class PlayerController {
-  constructor( gameController, ws, wss ) {
+  constructor( gameController, socket, server ) {
     this.game = gameController
-    this.wss = wss
-    this.ws = ws
+    this.server = server
+    this.socket = socket
     this.nickname = ``
     this.id = Math.random()
     this.color = null
     this.lastMessagesTimes = []
   }
 
-  send( type, data ) {
-    if ( this.ws.readyState !== 1 )
+  send( event, data ) {
+    if ( this.socket.readyState !== 1 )
       return
 
-    this.ws.send( JSON.stringify( { type, data } ) )
+    this.socket.send( JSON.stringify( { event, data } ) )
   }
 
-  broadcast( type, data ) {
-    this.wss.clients.forEach( ws => ws != this.ws  ?  ws.playerController.send( type, data )  :  null )
+  broadcast( event, data ) {
+    this.server.clients.forEach( socket => socket != this.socket  ?  socket.playerController.send( event, data )  :  null )
   }
 
-  eventHandler( type, data ) {
-    switch ( type ) {
+  eventHandler( event, data ) {
+    switch ( event ) {
       case `chat-new_message`:
         if ( data.length > 127 ) {
           this.send( `chat-new_message`, {
